@@ -1,0 +1,127 @@
+﻿@if (ShowModal)
+{
+    <div class="modal show" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content bg-light text-dark">
+                <div class="modal-header bg-primary text-white">
+                    <h3 class="modal-title"><i class="fas fa-clipboard-list me-2"></i>Review Information</h3>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4 class="mb-3">Personal Information</h4>
+                                <div class="card mb-3">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item"><strong>Name:</strong> @CurrentApplicant.fullName</li>
+                                        <li class="list-group-item"><strong>Type of Applicant:</strong> @CurrentApplicant.type_Applicant</li>
+                                        <li class="list-group-item"><strong>Name of Student:</strong> @CurrentApplicant.name_Student</li>
+                                        <li class="list-group-item"><strong>Course/Grade & Level:</strong> @CurrentApplicant.course_Grade</li>
+                                        <li class="list-group-item"><strong>Applicant Relationship:</strong> @CurrentApplicant.app_Relation</li>
+                                        <li class="list-group-item"><strong>Home Address:</strong> @CurrentApplicant.home_Ad</li>
+                                        <li class="list-group-item"><strong>Contact Number:</strong> @CurrentApplicant.app_Contact</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h4 class="mb-3">Vehicle Information</h4>
+                                <div class="card">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item"><strong>Vehicle Owner Name:</strong> @CurrentApplicant.ve_Owner</li>
+                                        <li class="list-group-item"><strong>Vehicle Owner's Relationship:</strong> @CurrentApplicant.ve_Relation</li>
+                                        <li class="list-group-item"><strong>Vehicle Plate Number:</strong> @CurrentApplicant.ve_PlateNO</li>
+                                        <li class="list-group-item"><strong>Vehicle Make:</strong> @CurrentApplicant.ve_Brand</li>
+                                        <li class="list-group-item"><strong>Vehicle Type:</strong> @CurrentApplicant.ve_Type</li>
+                                        <li class="list-group-item"><strong>Vehicle Series:</strong> @CurrentApplicant.ve_Series</li>
+                                        <li class="list-group-item"><strong>Vehicle Color:</strong> @CurrentApplicant.ve_Color</li>
+                                        <li class="list-group-item"><strong>Facefile Date:</strong> @CurrentApplicant.facefile_Date?.ToString("yyyy-MM-dd")</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center border-0">
+                    <button type="button" class="btn btn-secondary btn-lg me-2" @onclick="CloseModal">Close</button>
+                    <button type="button" class="btn btn-primary btn-lg" @onclick="HandleSubmit" >Proceed</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@if (ShowConfirmationModal)
+{
+    <div class="modal show" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h3 class="modal-title"><i class="fas fa-check-circle me-2"></i>Congratulations!</h3>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseConfirmationModal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <h4 class="text-center mb-4">You're officially registered!</h4>
+                    <p class="lead">To finish the application, please submit the following documents in person:</p>
+                    <ol class="list-group list-group-numbered mt-3">
+                        <li class="list-group-item">Photocopy of Vehicle's LTO Official Receipt (OR)</li>
+                        <li class="list-group-item">Photocopy of Vehicle's LTO Certificate of Registration (CR)</li>
+                        <li class="list-group-item">Photocopy of Driver's License</li>
+                        <li class="list-group-item">Photocopy of Affidavit of Undertaking or Proof of Ownership of Vehicle (for a vehicle not owned by the applicant or one with transfer of ownership to applicant still in process)</li>
+                        <li class="list-group-item">Photocopy of Student's Current Registration Form (RF) (for CPU Students and Parents/Guardian's of CPU students Only)</li>
+                        <li class="list-group-item">Photocopy of Student's Identification Card</li>
+                        <li class="list-group-item">Photo of Endorsement from Mr. Ernie Solatorio, Assistant to the VPFA on Enterprise Management (for CPU Tenants only)</li>
+                    </ol>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-primary btn-lg" @onclick="HandleDone">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Applicant CurrentApplicant { get; set; }
+
+    [Parameter]
+    public bool ShowModal { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> ShowModalChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnProceed { get; set; }
+
+    [Parameter]
+    public EventCallback OnDone { get; set; }
+
+    private bool ShowConfirmationModal { get; set; }
+
+    private async Task HandleSubmit()
+    {
+        await OnProceed.InvokeAsync();
+        ShowModal = false;
+        await ShowModalChanged.InvokeAsync(false);
+        ShowConfirmationModal = true;
+    }
+
+    private void CloseModal()
+    {
+        ShowModal = false;
+        ShowModalChanged.InvokeAsync(false);
+    }
+
+    private void CloseConfirmationModal()
+    {
+        ShowConfirmationModal = false;
+    }
+
+    private async Task HandleDone()
+    {
+        CloseConfirmationModal();
+        await OnDone.InvokeAsync();
+    }
+}

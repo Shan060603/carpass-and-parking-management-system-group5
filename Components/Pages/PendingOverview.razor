@@ -1,0 +1,642 @@
+﻿@page "/pendings"
+<PageTitle>Pending</PageTitle>
+@inject IPendingService PendingService
+@inject ICentralDataService CentralDataService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserService UserService
+@using System.Security.Claims
+@using Carpass_Profilling.Data
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager NavigationManager
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<style>
+    body {
+        background-color: #203354;
+        color: white;
+        font-family: Arial, sans-serif;
+    }
+
+    /* Added Flexbox container for header */
+    .header-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    /* Added styling for applicant count */
+    .applicant-count {
+        color: greenyellow;
+        font-size: 18px; /* Adjust font size to be similar to H3 */
+        font-weight: bold;
+    }
+
+    .table-container {
+        margin-top: 20px;
+        width: 100%;
+        border-radius: 8px; /* Add border radius for rounded corners */
+    }
+
+    .scrollable-table {
+        max-height: 450px; /* Adjust this value as needed */
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: white; /* Add background color */
+        border: 1px solid white; /* Add white border */
+        box-shadow: 2px 2px 10px white; /* Add box shadow */
+    }
+
+        .table th, .table td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        .table th {
+            background-color: #FCC60C;
+            color: #203354;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            
+        }
+
+        .table td {
+            color: #e0e0e0;
+            font-weight: bold;
+        }
+
+        .table tr:nth-child(even) {
+            background-color: #25337a;
+        }
+
+        .table tr:nth-child(odd) {
+            background-color: #333399;
+        }
+
+
+    .input-group {
+        margin-top: 20px;
+    }
+
+    .form-control {
+        color: #333;
+    }
+
+    .btn-primary, .btn-success, .btn-warning, .btn-danger {
+        margin: 2px;
+    }
+
+    .text-center {
+        margin-top: 20px;
+    }
+
+    .modal-content {
+        color: black;
+    }
+
+    /* Success message styling */
+    .success-message {
+        position: fixed;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        z-index: 999;
+    }
+</style>
+
+<!-- Added header-container div and applicant-count span -->
+<div class="header-container">
+    <h3>Pending Overview</h3>
+    <span class="applicant-count">Total No. of Approved: @pendings.Count</span>
+</div>
+
+@if (pendings.Count == 0)
+{
+    <div class="text-center">
+        <p><em>Loading data...</em></p>
+    </div>
+}
+else
+{
+    <div class="input-group">
+        <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="Search applicants by name, vehicle details, or date..." class="form-control" />
+    </div>
+    <div class="table-container">
+        <div class="scrollable-table">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th style="min-width: 50px;">ID</th>
+                        <th style="min-width: 150px;">Full Name</th>
+                        <th style="min-width: 150px;">Vehicle Owner Name</th>
+                        <th style="min-width: 150px;">Car Pass</th>
+                        <th style="min-width: 100px;">Plate No</th>
+                        <th style="min-width: 100px;">Brand</th>
+                        <th style="min-width: 150px;">Facefile Date</th>
+                        <th style="min-width: 150px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pend in filteredPendings)
+                    {
+                        <tr>
+                            <td>@pend.pending_ID</td>
+                            <td>@pend.fullName</td>
+                            <td>@pend.ve_Owner</td>
+                            <td>@pend.type_Carpass</td>
+                            <td>@pend.ve_PlateNO</td>
+                            <td>@pend.ve_Brand</td>
+                            <td>@(pend.facefile_Date.HasValue ? pend.facefile_Date.Value.ToString("yyyy-MM-dd") : "")</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-primary btn-sm" @onclick="@(() => ViewPending(pend.pending_ID))">View</button>
+                                    <button class="btn btn-success btn-sm" @onclick="@(() => OpenAssignCarpassModal(pend.pending_ID))">Assign</button>
+                                    <button class="btn btn-warning btn-sm" @onclick="@(() => EditPending(pend.pending_ID))">Edit</button>
+                                    <button class="btn btn-danger btn-sm" @onclick="@(() => DeletePending(pend.pending_ID))">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+}
+
+<!-- Modal for Assigning Carpass No -->
+@if (isAssignCarpassModalOpen)
+{
+    <div class="modal show" tabindex="-1" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Assign Carpass No</h5>
+                    <button type="button" class="btn-close" @onclick="CloseAssignCarpassModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="carpassNo" class="form-label">Carpass No</label>
+                        <input type="text" class="form-control" id="carpassNo" @bind="carpassNo" maxlength="10" pattern="[A-Za-z0-9]{1,10}" title="Carpass No should be alphanumeric and up to 10 characters long">
+                    </div>
+                    <div class="mb-3">
+                        <label for="refNumber" class="form-label">Receipt Reference No.</label>
+                        <input type="text" class="form-control" id="refNumber" @bind="refNumber" maxlength="6" pattern="\d{1,6}" title="Receipt Reference No. should be numeric and up to 6 digits long">
+                    </div>
+                    <div class="mb-3">
+                        <label for="issuedBy" class="form-label">Issued By</label>
+                        <input type="text" class="form-control" id="issuedBy" @bind="issuedBy" readonly />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" @onclick="AssignCarpassNo" disabled="@IsSaveButtonDisabled">Save</button>
+                    <button type="button" class="btn btn-secondary" @onclick="CloseAssignCarpassModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@if (isAssignSuccess)
+{
+    <div class="success-message-modal">
+        <div class="success-message-content">
+            <i class="fas fa-check-circle"></i>
+            <h2>Success!</h2>
+            <p>Carpass successfully assigned!</p>
+            <button class="close-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+}
+
+<style>
+    .success-message-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .success-message-content {
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        max-width: 400px;
+        width: 90%;
+    }
+
+        .success-message-content i {
+            font-size: 60px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        .success-message-content h2 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+
+        .success-message-content p {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+    .close-btn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+        .close-btn:hover {
+            background-color: #45a049;
+        }
+</style>
+
+<script>
+    function closeModal() {
+        document.querySelector('.success-message-modal').style.display = 'none';
+    }
+</script>
+
+
+<!-- Modal for Viewing Pending Details -->
+@if (isViewPendingModalOpen)
+{
+    <div class="modal show" tabindex="-1" style="display: block;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-light text-dark">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-black">Pending Details</h5>
+                    <button type="button" class="btn-close btn-close-black" @onclick="CloseViewPendingModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col">
+                                <p><strong>Full Name:</strong> @selectedPending?.fullName</p>
+                                <p><strong>Type of Applicant:</strong> @selectedPending?.type_Applicant</p>
+                                <p><strong>Type of Car Pass:</strong> @selectedPending?.type_Carpass</p>
+                                <p><strong>Name of Student:</strong> @selectedPending?.name_Student</p>
+                                <p><strong>Course/Grade & Level:</strong> @selectedPending?.course_Grade</p>
+                                <p><strong>Relationship with Student/Pupil:</strong> @selectedPending?.app_Relation</p>
+                                <p><strong>Home Address:</strong> @selectedPending?.home_Ad</p>
+                                <p><strong>Contact:</strong> @selectedPending?.app_Contact</p>
+                            </div>
+                            <div class="col">
+                                <p><strong>Vehicle Owner Name:</strong> @selectedPending?.ve_Owner</p>
+                                <p><strong>Vehicle Relationship to Applicant:</strong> @selectedPending?.ve_Relation</p>
+                                <p><strong>Plate No:</strong> @selectedPending?.ve_PlateNO</p>
+                                <p><strong>Brand:</strong> @selectedPending?.ve_Brand</p>
+                                <p><strong>Type:</strong> @selectedPending?.ve_Type</p>
+                                <p><strong>Series:</strong> @selectedPending?.ve_Series</p>
+                                <p><strong>Color:</strong> @selectedPending?.ve_Color</p>
+                                <p><strong>School Year:</strong> @selectedPending?.schoolyear</p>
+                                <p><strong>Facefile Date:</strong> @selectedPending?.facefile_Date?.ToString("yyyy-MM-dd")</p>
+                            </div>
+                        </div>
+                        <!-- Document Submission Status -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <h4 class="mb-3">Document Submission Status</h4>
+                                <div class="card">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Photocopy of Vehicle's LTO Official Receipt (OR):</strong>
+                                            <span>
+                                                @(selectedPending?.Doc1 != null && selectedPending.Doc1.Length > 0 ? "Submitted" : "Not Submitted")
+                                                <button class="btn btn-primary btn-sm ml-2" @onclick="() => OpenImageModal(selectedPending?.Doc1)">View</button>
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Photocopy of Vehicle's LTO Certificate of Registration (CR):</strong>
+                                            <span>
+                                                @(selectedPending?.Doc2 != null && selectedPending.Doc2.Length > 0 ? "Submitted" : "Not Submitted")
+                                                <button class="btn btn-primary btn-sm ml-2" @onclick="() => OpenImageModal(selectedPending?.Doc2)">View</button>
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Photocopy of Driver's License:</strong>
+                                            <span>
+                                                @(selectedPending?.Doc3 != null && selectedPending.Doc3.Length > 0 ? "Submitted" : "Not Submitted")
+                                                <button class="btn btn-primary btn-sm ml-2" @onclick="() => OpenImageModal(selectedPending?.Doc3)">View</button>
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Photocopy of Affidavit of Undertaking or Proof of Ownership of Vehicle:</strong>
+                                            <span>
+                                                @(selectedPending?.Doc4 != null && selectedPending.Doc4.Length > 0 ? "Submitted" : "Not Submitted")
+                                                <button class="btn btn-primary btn-sm ml-2" @onclick="() => OpenImageModal(selectedPending?.Doc4)">View</button>
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Photocopy of Student's Current Registration Form (RF):</strong>
+                                            <span>
+                                                @(selectedPending?.Doc5 != null && selectedPending.Doc5.Length > 0 ? "Submitted" : "Not Submitted")
+                                                <button class="btn btn-primary btn-sm ml-2" @onclick="() => OpenImageModal(selectedPending?.Doc5)">View</button>
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Photocopy of Student's Identification Card:</strong>
+                                            <span>
+                                                @(selectedPending?.Doc6 != null && selectedPending.Doc6.Length > 0 ? "Submitted" : "Not Submitted")
+                                                <button class="btn btn-primary btn-sm ml-2" @onclick="() => OpenImageModal(selectedPending?.Doc6)">View</button>
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Photo of Endorsement from Mr. Ernie Solatorio:</strong>
+                                            <span>
+                                                @(selectedPending?.Doc7 != null && selectedPending.Doc7.Length > 0 ? "Submitted" : "Not Submitted")
+                                                <button class="btn btn-primary btn-sm ml-2" @onclick="() => OpenImageModal(selectedPending?.Doc7)">View</button>
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseViewPendingModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<!-- Image Modal -->
+@if (isImageModalOpen)
+{
+    <div class="modal show" tabindex="-1" style="display: block;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Document Image</h5>
+                    <button type="button" class="btn-close" @onclick="CloseImageModal"></button>
+                </div>
+                <div class="modal-body d-flex justify-content-center align-items-center" style="overflow: auto; max-height: 80vh;">
+                    <img src="data:image/jpeg;base64,@selectedImageBase64" alt="Document Image" class="img-fluid" style="max-width: 100%; max-height: 100%; display: block; margin: auto;" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseImageModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+
+@if (isDeleteConfirmationModalOpen)
+{
+    <div class="modal show" tabindex="-1" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" @onclick="CloseDeleteConfirmationModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this applicant?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmDelete">Confirm</button>
+                    <button type="button" class="btn btn-secondary" @onclick="CloseDeleteConfirmationModal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    List<Pending> pendings = new List<Pending>();
+    private bool isViewPendingModalOpen = false;
+    private bool isAssignCarpassModalOpen = false;
+    private int selectedPendingId;
+    private Pending selectedPending;
+    private string carpassNo;
+    private string refNumber;
+    private string issuedBy;
+    private string searchTerm = "";
+    private bool isAssignSuccess = false;
+    private string currentUserName = "";
+
+    private bool isImageModalOpen = false;
+    private string selectedImageBase64 = string.Empty;
+
+
+
+
+
+    private IEnumerable<Pending> filteredPendings =>
+        string.IsNullOrWhiteSpace(searchTerm) ? pendings : pendings.Where(a =>
+            (a.fullName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (a.type_Carpass?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (a.ve_Owner?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (a.ve_PlateNO?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (a.ve_Brand?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (a.facefile_Date?.ToString("yyyy-MM-dd").Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(500);
+        pendings = await PendingService.GetAllPendingsAsync();
+
+        // Get current user's name
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+            if (email != null)
+            {
+                var currentUser = UserService.GetUserByEmail(email);
+                currentUserName = currentUser?.Name ?? "";
+            }
+        }
+    }
+
+    private void OpenAssignCarpassModal(int pendingId)
+    {
+        selectedPendingId = pendingId;
+        isAssignCarpassModalOpen = true;
+        // Automatically set the issued by field to the current user's name
+        issuedBy = currentUserName;
+    }
+
+    void EditPending(int id)
+    {
+        NavigationManager.NavigateTo($"/edit-pending/{id}");
+    }
+
+    void AddPending()
+    {
+        NavigationManager.NavigateTo("/edit-applicant");
+    }
+
+
+    private void CloseAssignCarpassModal()
+    {
+        isAssignCarpassModalOpen = false;
+        carpassNo = string.Empty;
+        refNumber = string.Empty;
+        issuedBy = string.Empty;
+    }
+
+    private async Task AssignCarpassNo()
+    {
+        var pending = await PendingService.GetPendingsByIdAsync(selectedPendingId);
+        if (pending != null)
+        {
+            Console.WriteLine($"Assigning Carpass No: {carpassNo}");
+
+            // Calculate the expiration date
+            var currentYear = DateTime.Now.Year;
+            DateOnly expirationDate;
+
+            if (DateTime.Now.Month < 8)
+            {
+                // If the current date is before August, set expiration to August of the current year
+                expirationDate = new DateOnly(currentYear, 8, 1);
+            }
+            else
+            {
+                // If the current date is August or later, set expiration to August of the next year
+                expirationDate = new DateOnly(currentYear + 1, 8, 1);
+            }
+
+            var centralData = new Central_Data
+                {
+                    pending_ID = pending.pending_ID,
+                    fullname = pending.fullName,
+                    type_applicant = pending.type_Applicant,
+                    type_carpass = pending.type_Carpass,
+                    name_student = pending.name_Student,
+                    course_grade = pending.course_Grade,
+                    app_relation = pending.app_Relation,
+                    home_ad = pending.home_Ad,
+                    app_contact = pending.app_Contact,
+                    ve_owner = pending.ve_Owner,
+                    ve_relation = pending.ve_Relation,
+                    ve_plateno = pending.ve_PlateNO,
+                    ve_brand = pending.ve_Brand,
+                    ve_type = pending.ve_Type,
+                    ve_series = pending.ve_Series,
+                    ve_color = pending.ve_Color,
+                    carpass_no = carpassNo,
+                    ref_number = refNumber,
+                    issued_by = issuedBy,
+                    schoolyear = pending.schoolyear,
+                    sub_Date = pending.facefile_Date,
+                    app_Date = DateOnly.FromDateTime(DateTime.Now),
+                    Doc1 = pending.Doc1,
+                    Doc2 = pending.Doc2,
+                    Doc3 = pending.Doc3,
+                    Doc4 = pending.Doc4,
+                    Doc5 = pending.Doc5,
+                    Doc6 = pending.Doc6,
+                    Doc7 = pending.Doc7,
+                    expiration_Date = expirationDate // Add expiration date
+
+                };
+
+            await CentralDataService.AddCentral_DatasAsync(centralData);
+            await PendingService.DeletePendingsAsync(selectedPendingId);
+
+            pendings = await PendingService.GetAllPendingsAsync();
+            CloseAssignCarpassModal();
+
+            // Show success message and hide after 5 seconds
+            isAssignSuccess = true;
+            StateHasChanged(); // Ensure UI updates immediately
+
+            await Task.Delay(5000); // Delay for 5 seconds
+            isAssignSuccess = false;
+        }
+    }
+
+
+
+    private async void ViewPending(int pendingId)
+    {
+        selectedPending = await PendingService.GetPendingsByIdAsync(pendingId);
+        isViewPendingModalOpen = true;
+    }
+
+    private void CloseViewPendingModal()
+    {
+        isViewPendingModalOpen = false;
+        selectedPending = null;
+    }
+
+    private bool isDeleteConfirmationModalOpen = false;
+    private int pendingToDeleteId;
+
+    void DeletePending(int id)
+    {
+        pendingToDeleteId = id;
+        isDeleteConfirmationModalOpen = true;
+    }
+
+    private void CloseDeleteConfirmationModal()
+    {
+        isDeleteConfirmationModalOpen = false;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        await PendingService.DeletePendingsAsync(pendingToDeleteId);
+        pendings = await PendingService.GetAllPendingsAsync();
+        CloseDeleteConfirmationModal();
+    }
+
+    private bool IsSaveButtonDisabled => string.IsNullOrWhiteSpace(carpassNo) || string.IsNullOrWhiteSpace(refNumber) || string.IsNullOrWhiteSpace(issuedBy);
+
+
+    private void OpenImageModal(byte[] document)
+    {
+        if (document != null && document.Length > 0)
+        {
+            selectedImageBase64 = Convert.ToBase64String(document);
+            isImageModalOpen = true;
+        }
+    }
+
+    private void CloseImageModal()
+    {
+        isImageModalOpen = false;
+        selectedImageBase64 = string.Empty;
+    }
+}
+
+
+

@@ -1,0 +1,27 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUri = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).ToLower();
+
+        // List of pages that are public and do not require authentication
+        var publicPages = new List<string> { "about", "contact", "home" };
+
+        // If the current page is not in the publicPages list, perform authentication check
+        if (!publicPages.Any(page => currentUri.StartsWith(page)))
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            // Redirect to login page if the user is not authenticated
+            if (!user.Identity.IsAuthenticated)
+            {
+                // Only redirect to login if it's a restricted page
+                NavigationManager.NavigateTo($"/login", true);
+            }
+        }
+    }
+}

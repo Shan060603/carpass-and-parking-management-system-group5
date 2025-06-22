@@ -1,0 +1,86 @@
+﻿@using Carpass_Profilling.Models
+@using System.ComponentModel.DataAnnotations
+
+<EditForm Model="@editingUser" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="name" class="form-label">Full Name</label>
+            <InputText id="name" @bind-Value="editingUser.Name" class="form-control" />
+            <ValidationMessage For="@(() => editingUser.Name)" />
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="gender" class="form-label">Gender</label>
+            <InputSelect id="gender" @bind-Value="editingUser.Gender" class="form-select">
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="PreferNotToSay">Prefer not to say</option>
+            </InputSelect>
+            <ValidationMessage For="@(() => editingUser.Gender)" />
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="email" class="form-label">Email Address</label>
+            <InputText id="email" @bind-Value="editingUser.Email" class="form-control" />
+            <ValidationMessage For="@(() => editingUser.Email)" />
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="birthday" class="form-label">Birthday</label>
+            <InputDate id="birthday" @bind-Value="editingUser.Birthday" class="form-control" />
+            <ValidationMessage For="@(() => editingUser.Birthday)" />
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="image" class="form-label">Profile Picture</label>
+            <InputFile id="image" OnChange="HandleFileChange" class="form-control" accept="image/*" />
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+        </div>
+        <div class="col-md-6">
+            <button type="button" class="btn btn-secondary w-100" @onclick="OnCancel">Cancel</button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter] public User User { get; set; }
+    [Parameter] public EventCallback<User> OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private User editingUser;
+
+    protected override void OnInitialized()
+    {
+        // Create a copy of the user object to avoid modifying the original directly
+        editingUser = new User
+            {
+                Name = User.Name,
+                Gender = User.Gender,
+                Email = User.Email,
+                Birthday = User.Birthday,
+                Role = User.Role,
+                Image = User.Image
+            };
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnSave.InvokeAsync(editingUser);
+    }
+
+    private async Task HandleFileChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            var ms = new MemoryStream();
+            await file.OpenReadStream().CopyToAsync(ms);
+            editingUser.Image = ms.ToArray();
+        }
+    }
+}

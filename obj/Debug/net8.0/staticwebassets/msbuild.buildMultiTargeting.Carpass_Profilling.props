@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\Carpass_Profilling.props" />
+</Project>

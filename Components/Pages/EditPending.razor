@@ -1,0 +1,596 @@
+﻿@page "/edit-pending"
+@page "/edit-pending/{Id:int}"
+@inject IPendingService PendingService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+@using SixLabors.ImageSharp;
+@using SixLabors.ImageSharp.Formats.Jpeg;
+@using SixLabors.ImageSharp.Processing;
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<EditForm Model="CurrentPending" OnValidSubmit="HandleSubmit">
+    <div class="background-wrapper">
+        <div class="container py-5 h-100" style="background-color: floralwhite;">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card" style="border-top: 5px solid #c0c0c0; border-bottom: 5px solid #c0c0c0;">
+                        <div class="card-body" style="background-color: #e0ffff; ">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h3 class="mb-4">Registration Form</h3>
+                                    <div class="mb-3">
+                                        <label for="fullname" class="form-label">Name of Applicant *</label>
+                                        <InputText id="fullname" class="form-control form-control-lg" @bind-Value="CurrentPending.fullName" required @onblur="ValidateFields" maxlength="100"></InputText>
+                                        <ValidationMessage For="@(() => CurrentPending.fullName)" />
+                                        <span class="text-danger">@FullNameValidationMessage</span>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="type" class="form-label">Type of Applicant *</label>
+                                            <InputSelect id="type" class="form-select" @bind-Value="CurrentPending.type_Applicant" required>
+                                                @foreach (var type in type_Applicant)
+                                                {
+                                                    <option value="@type">@type</option>
+                                                }
+                                            </InputSelect>
+                                            <ValidationMessage For="@(() => CurrentPending.type_Applicant)" />
+                                            <span class="text-danger">@TypeApplicantValidationMessage</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="type" class="form-label">Type of Car Pass *</label>
+                                            <InputSelect id="type" class="form-select" @bind-Value="CurrentPending.type_Carpass" required>
+                                                @foreach (var type in type_Carpass)
+                                                {
+                                                    <option value="@type">@type</option>
+                                                }
+                                            </InputSelect>
+                                            <ValidationMessage For="@(() => CurrentPending.type_Carpass)" />
+                                            <span class="text-danger">@TypeCarpassValidationMessage</span>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="studentname" class="form-label">Name of Student</label>
+                                            <InputText id="studentname" class="form-control form-control-lg" placeholder="If applicable" @bind-Value="CurrentPending.name_Student" maxlength="100"></InputText>
+                                            <ValidationMessage For="@(() => CurrentPending.name_Student)" />
+                                            <span class="text-danger">@NameStudentValidationMessage</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="course" class="form-label">Course/Grade & Level *</label>
+                                            <InputText id="course" class="form-control form-control-lg" @bind-Value="CurrentPending.course_Grade" required maxlength="50"></InputText>
+                                            <ValidationMessage For="@(() => CurrentPending.course_Grade)" />
+                                            <span class="text-danger">@CourseGradeValidationMessage</span>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="relation" class="form-label">Applicant Relationship *</label>
+                                            <InputText id="relation" class="form-control form-control-lg" placeholder="If applicable" @bind-Value="CurrentPending.app_Relation" required maxlength="30"></InputText>
+                                            <ValidationMessage For="@(() => CurrentPending.app_Relation)" />
+                                            <span class="text-danger">@AppRelationValidationMessage</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="contact" class="form-label">Contact Number *</label>
+                                            <InputText id="contact" class="form-control form-control-lg" @bind-Value="CurrentPending.app_Contact" required pattern="^\d{11}$" title="Contact number must be 11 digits"></InputText>
+                                            <ValidationMessage For="@(() => CurrentPending.app_Contact)" />
+                                            <span class="text-danger">@AppContactValidationMessage</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="homead" class="form-label">Home Address *</label>
+                                        <InputText id="homead" class="form-control form-control-lg" @bind-Value="CurrentPending.home_Ad" required maxlength="200"></InputText>
+                                        <ValidationMessage For="@(() => CurrentPending.home_Ad)" />
+                                        <span class="text-danger">@HomeAdValidationMessage</span>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="veowner" class="form-label">Name of Vehicle Owner *</label>
+                                            <InputText id="veowner" class="form-control form-control-lg" @bind-Value="CurrentPending.ve_Owner" required @onblur="ValidateFields" maxlength="100"></InputText>
+                                            <ValidationMessage For="@(() => CurrentPending.ve_Owner)" />
+                                            <span class="text-danger">@VeOwnerValidationMessage</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="verelation" class="form-label">Vehicle Owner's Relationship</label>
+                                            <InputText id="verelation" class="form-control form-control-lg" placeholder="If not the owner" @bind-Value="CurrentPending.ve_Relation" @onblur="ValidateFields" disabled="@IsVehicleOwnerRelationDisabled" maxlength="50"></InputText>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <h3 class="mb-4">Car Information</h3>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="veplate" class="form-label">Vehicle Plate Number *</label>
+                                            <InputText id="veplate" class="form-control form-control-lg" @bind-Value="CurrentPending.ve_PlateNO" required maxlength="10" pattern="^[A-Z0-9]+$" title="Plate number must be alphanumeric"></InputText>
+                                            <ValidationMessage For="@(() => CurrentPending.ve_PlateNO)" />
+                                            <span class="text-danger">@VePlateNOValidationMessage</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="brand" class="form-label">Vehicle Make (Brand) *</label>
+                                            <InputText id="brand" class="form-control form-control-lg" placeholder="Brand" @bind-Value="CurrentPending.ve_Brand" required maxlength="50"></InputText>
+                                            <ValidationMessage For="@(() => CurrentPending.ve_Brand)" />
+                                            <span class="text-danger">@VeBrandValidationMessage</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="vetype" class="form-label">Vehicle Type *</label>
+                                        <InputSelect id="vetype" class="form-select" @bind-Value="CurrentPending.ve_Type" required>
+                                            @foreach (var type in vehicleTypes)
+                                            {
+                                                <option value="@type">@type</option>
+                                            }
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => CurrentPending.ve_Type)" />
+                                        <span class="text-danger">@VeTypeValidationMessage</span>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="series" class="form-label">Vehicle Series (Model) *</label>
+                                            <InputText id="series" class="form-control form-control-lg" placeholder="Model" @bind-Value="CurrentPending.ve_Series" required maxlength="50"></InputText>
+                                            <ValidationMessage For="@(() => CurrentPending.ve_Series)" />
+                                            <span class="text-danger">@VeSeriesValidationMessage</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="color" class="form-label">Vehicle Color *</label>
+                                            <InputText id="color" class="form-control form-control-lg" @bind-Value="CurrentPending.ve_Color" required maxlength="50"></InputText>
+                                            <ValidationMessage For="@(() => CurrentPending.ve_Color)" />
+                                            <span class="text-danger">@VeColorValidationMessage</span>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="schoolYear" class="form-label">School Year</label>
+                                            <InputText id="schoolYear" class="form-control form-control-lg" @bind-Value="CurrentPending.schoolyear" readonly></InputText>
+                                            <ValidationMessage For="@(() => CurrentPending.schoolyear)" />
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="container-fluid px-4 py-3">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="alert alert-warning text-center mb-4" role="alert">
+                                                <strong>Important Notice:</strong>
+                                                By uploading these documents, you acknowledge the confidentiality of these materials and take full responsibility for sharing them on this website.
+                                                Documents can be submitted either online or in-person.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="document-upload-card border rounded p-3 text-center">
+                                                <InputFile OnChange="@(e => HandleFileSelected(e, "doc1"))" id="doc1" class="form-control mb-2" />
+                                                <label for="doc1" class="form-label fw-bold">Vehicle's LTO Official Receipt (OR)</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="document-upload-card border rounded p-3 text-center">
+                                                <InputFile OnChange="@(e => HandleFileSelected(e, "doc2"))" id="doc2" class="form-control mb-2" />
+                                                <label for="doc2" class="form-label fw-bold">Vehicle's LTO Certificate of Registration (CR)</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="document-upload-card border rounded p-3 text-center">
+                                                <InputFile OnChange="@(e => HandleFileSelected(e, "doc3"))" id="doc3" class="form-control mb-2" />
+                                                <label for="doc3" class="form-label fw-bold">Driver's License</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="document-upload-card border rounded p-3 text-center">
+                                                <InputFile OnChange="@(e => HandleFileSelected(e, "doc4"))" id="doc4" class="form-control mb-2" />
+                                                <label for="doc4" class="form-label fw-bold">Affidavit of Undertaking or Proof of Vehicle Ownership</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="document-upload-card border rounded p-3 text-center">
+                                                <InputFile OnChange="@(e => HandleFileSelected(e, "doc5"))" id="doc5" class="form-control mb-2" />
+                                                <label for="doc5" class="form-label fw-bold">Student's Current Registration Form (RF)</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="document-upload-card border rounded p-3 text-center">
+                                                <InputFile OnChange="@(e => HandleFileSelected(e, "doc6"))" id="doc6" class="form-control mb-2" />
+                                                <label for="doc6" class="form-label fw-bold">Student's Identification Card</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-lg-4 offset-lg-4">
+                                            <div class="document-upload-card border rounded p-3 text-center">
+                                                <InputFile OnChange="@(e => HandleFileSelected(e, "doc7"))" id="doc7" class="form-control mb-2" />
+                                                <label for="doc7" class="form-label fw-bold">Endorsement from Mr. Ernie Solatorio</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3 d-flex align-items-center" style="padding: 20px; border: 1px solid #ccc; border-radius: 10px; background-color: #f9f9f9; font-size: 1rem;">
+                                    <!-- Register Button on the Left -->
+                                    <button type="button" class="btn btn-primary" @onclick="OnSubmit" style="padding: 10px 20px; font-size: 16px; border-radius: 5px; width: auto; margin-right: 15px;">
+                                        @(Id == null ? "Register" : "Save")
+                                    </button>
+
+                                    <!-- Terms and Conditions -->
+                                    <div class="form-check d-flex align-items-center" style="flex-wrap: wrap;">
+                                        <div class="d-flex align-items-center" style="margin-right: 20px;">
+                                            <input class="form-check-input" type="checkbox" id="terms" @bind="IsTermsAccepted" style="transform: scale(1); margin-right: 10px;" />
+                                            <label class="form-check-label" for="terms">
+                                                I accept the <a href="about" style="color: #007bff; text-decoration: underline;">Terms and Conditions</a> of your site.
+                                            </label>
+                                        </div>
+                                        <span class="text-danger" style="font-size: 16px; margin-left: 20px;">@TermsValidationMessage</span>
+                                    </div>
+                                </div>
+
+                                @if (Id != null)
+                                {
+                                    <button type="button" class="btn btn-secondary ms-2" @onclick="NavigateBack">Back</button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+<style>
+    .container-custom {
+        background-color: #0492C2;
+        /* Add any other styles you need */
+    }
+
+    .footer {
+        text-align: center;
+        margin-top: 20px;
+        padding-top: 10px;
+        border: 1px solid #ddd;
+        border-bottom: 3px solid yellow;
+        font-size: 13px;
+        color: darkgrey;
+        background-color: #25337a;
+    }
+
+    .document-list {
+        list-style: none;
+        padding: 0;
+    }
+
+        .document-list li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .document-list input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+    .button-group {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+    }
+</style>
+
+@if (ShowPendingModal)
+{
+    <PendingModal CurrentPending="@CurrentPending" ShowModal="ShowPendingModal" OnProceed="HandleSubmit" OnDone="HandleDone" />
+}
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    public Pending CurrentPending { get; set; } = new();
+
+    private bool ShowPendingModal { get; set; }
+    private string FullNameValidationMessage { get; set; }
+    private string TypeApplicantValidationMessage { get; set; }
+    private string TypeCarpassValidationMessage { get; set; }
+    private string NameStudentValidationMessage { get; set; }
+    private string CourseGradeValidationMessage { get; set; }
+    private string AppRelationValidationMessage { get; set; }
+    private string AppContactValidationMessage { get; set; }
+    private string HomeAdValidationMessage { get; set; }
+    private string VeOwnerValidationMessage { get; set; }
+    private string VeRelationValidationMessage { get; set; }
+    private string VePlateNOValidationMessage { get; set; }
+    private string VeBrandValidationMessage { get; set; }
+    private string VeTypeValidationMessage { get; set; }
+    private string VeSeriesValidationMessage { get; set; }
+    private string VeColorValidationMessage { get; set; }
+    private string TermsValidationMessage { get; set; }
+
+    private bool IsVehicleOwnerRelationDisabled { get; set; } = false;
+    private bool IsTermsAccepted { get; set; } = false;
+
+    private bool IsDoc1Submitted { get; set; }
+    private bool IsDoc2Submitted { get; set; }
+    private bool IsDoc3Submitted { get; set; }
+    private bool IsDoc4Submitted { get; set; }
+    private bool IsDoc5Submitted { get; set; }
+    private bool IsDoc6Submitted { get; set; }
+    private bool IsDoc7Submitted { get; set; }
+
+    private List<string> vehicleTypes = new List<string>
+    {
+        "",
+        "SUV",
+        "Hatchback",
+        "CrossOver",
+        "Convertible",
+        "Sports Car",
+        "Coupe",
+        "Minivan",
+        "Station Wagon",
+        "Pickup Truck",
+        "Sedan"
+    };
+
+    private List<string> type_Applicant = new List<string>
+    {
+        "",
+        "Parents of CPU Student",
+        "Guardian of CPU Student",
+        "CPU Student",
+        "CPU Tenant",
+        "CPU Faculty",
+        "Other"
+    };
+
+    private List<string> type_Carpass = new List<string>
+    {
+        "",
+        "Php 5,000.00 Paid Parking",
+        "Php 2,500.00 Non-Paid Parking",
+        "Php 1,500.00 Non-Paid Parking"
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id is not null)
+        {
+            var pending = await PendingService.GetPendingsByIdAsync((int)Id);
+            if (pending is not null)
+            {
+                CurrentPending = pending;
+                // Initialize temporary variables with current values
+                IsDoc1Submitted = CurrentPending.IsDoc1Submitted;
+                IsDoc2Submitted = CurrentPending.IsDoc2Submitted;
+                IsDoc3Submitted = CurrentPending.IsDoc3Submitted;
+                IsDoc4Submitted = CurrentPending.IsDoc4Submitted;
+                IsDoc5Submitted = CurrentPending.IsDoc5Submitted;
+                IsDoc6Submitted = CurrentPending.IsDoc6Submitted;
+                IsDoc7Submitted = CurrentPending.IsDoc7Submitted;
+            }
+        }
+    }
+
+    async Task HandleSubmit()
+    {
+        if (!ValidateForm())
+        {
+            return;
+        }
+
+
+        if (Id is not null)
+        {
+            await PendingService.UpdatePendingsAsync(CurrentPending, (int)Id);
+        }
+        else
+        {
+            await PendingService.AddPendingsAsync(CurrentPending);
+        }
+        // Don't navigate away yet, let the confirmation modal handle it
+    }
+
+    void HandleModalStateChanged(bool showModal)
+    {
+        ShowPendingModal = showModal;
+    }
+
+    async Task OnSubmit()
+    {
+        if (ValidateForm())
+        {
+            ShowPendingModal = true;
+        }
+    }
+
+    void HandleDone()
+    {
+        NavigationManager.NavigateTo("/pendings");
+    }
+
+    void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/pendings");
+    }
+
+    bool ValidateForm()
+    {
+        var isValid = true;
+        FullNameValidationMessage = string.Empty;
+        TypeApplicantValidationMessage = string.Empty;
+        TypeCarpassValidationMessage = string.Empty;
+        NameStudentValidationMessage = string.Empty;
+        CourseGradeValidationMessage = string.Empty;
+        AppRelationValidationMessage = string.Empty;
+        AppContactValidationMessage = string.Empty;
+        HomeAdValidationMessage = string.Empty;
+        VeOwnerValidationMessage = string.Empty;
+        VeRelationValidationMessage = string.Empty;
+        VePlateNOValidationMessage = string.Empty;
+        VeBrandValidationMessage = string.Empty;
+        VeTypeValidationMessage = string.Empty;
+        VeSeriesValidationMessage = string.Empty;
+        VeColorValidationMessage = string.Empty;
+        TermsValidationMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(CurrentPending.fullName))
+        {
+            FullNameValidationMessage = "Required.";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(CurrentPending.type_Applicant))
+        {
+            TypeApplicantValidationMessage = "Required.";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(CurrentPending.type_Carpass))
+        {
+            TypeCarpassValidationMessage = "Required.";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(CurrentPending.course_Grade))
+        {
+            CourseGradeValidationMessage = "Required.";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(CurrentPending.app_Contact))
+        {
+            AppContactValidationMessage = "Required.";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(CurrentPending.home_Ad))
+        {
+            HomeAdValidationMessage = "Required.";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(CurrentPending.ve_Owner))
+        {
+            VeOwnerValidationMessage = "Required.";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(CurrentPending.ve_PlateNO))
+        {
+            VePlateNOValidationMessage = "Required.";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(CurrentPending.ve_Brand))
+        {
+            VeBrandValidationMessage = "Required.";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(CurrentPending.ve_Type))
+        {
+            VeTypeValidationMessage = "Required.";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(CurrentPending.ve_Series))
+        {
+            VeSeriesValidationMessage = "Required.";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(CurrentPending.ve_Color))
+        {
+            VeColorValidationMessage = "Required.";
+            isValid = false;
+        }
+
+        if (!IsTermsAccepted)
+        {
+            TermsValidationMessage = "You must accept the terms and conditions.";
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    void ValidateFields()
+    {
+        IsVehicleOwnerRelationDisabled = CurrentPending.fullName == CurrentPending.ve_Owner;
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e, string docType)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            const long maxFileSize = 5 * 1024 * 1024; // 5 MB
+
+            if (file.Size > maxFileSize)
+            {
+                Console.WriteLine("File size exceeds the limit.");
+                return;
+            }
+
+            try
+            {
+                using var stream = file.OpenReadStream(maxFileSize);
+                using var image = await Image.LoadAsync(stream);
+
+                image.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Mode = ResizeMode.Max,
+                        Size = new SixLabors.ImageSharp.Size(800, 800)
+                    }));
+
+                using var memoryStream = new MemoryStream();
+                var encoder = new JpegEncoder { Quality = 75 };
+                await image.SaveAsJpegAsync(memoryStream, encoder);
+
+                if (memoryStream.Length > 100 * 1024)
+                {
+                    Console.WriteLine("Image could not be downsized under 100 KB.");
+                    return;
+                }
+
+                var buffer = memoryStream.ToArray();
+
+                switch (docType)
+                {
+                    case "doc1":
+                        CurrentPending.Doc1 = buffer;
+                        break;
+                    case "doc2":
+                        CurrentPending.Doc2 = buffer;
+                        break;
+                    case "doc3":
+                        CurrentPending.Doc3 = buffer;
+                        break;
+                    case "doc4":
+                        CurrentPending.Doc4 = buffer;
+                        break;
+                    case "doc5":
+                        CurrentPending.Doc5 = buffer;
+                        break;
+                    case "doc6":
+                        CurrentPending.Doc6 = buffer;
+                        break;
+                    case "doc7":
+                        CurrentPending.Doc7 = buffer;
+                        break;
+                    default:
+                        Console.WriteLine("Unknown document type.");
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while processing the file: {ex.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("No file selected.");
+        }
+    }
+
+
+}

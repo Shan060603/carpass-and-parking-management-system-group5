@@ -1,0 +1,385 @@
+﻿@page "/editaccount"
+@using System.ComponentModel.DataAnnotations
+@using Carpass_Profilling.Components.Shared
+@using Carpass_Profilling.Data
+@using System.IO
+@inject NavigationManager navigationManager
+
+@inject UserService userService
+@inject IJSRuntime JSRuntime
+
+@rendermode InteractiveServer
+
+<style>
+    .container-fluid {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .card {
+        border: none;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        background-color: #007bff;
+        color: white;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .image-preview-container {
+        width: 200px;
+        height: 200px;
+        margin: 20px auto;
+        border: 2px solid #007bff;
+        border-radius: 50%;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .image-preview, .image-preview-placeholder {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .image-preview-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #e9ecef;
+        color: #6c757d;
+        font-size: 48px;
+    }
+
+    .image-label {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: rgba(0,0,0,0.5);
+        color: white;
+        text-align: center;
+        padding: 5px;
+        font-size: 12px;
+    }
+
+    .form-floating > label {
+        left: 0.5rem;
+    }
+
+    .go-back-icon {
+        float: right;
+        cursor: pointer;
+        font-size: 24px;
+        color: white;
+        margin-top: 5px;
+    }
+
+        .go-back-icon:hover {
+            color: #c0c0c0;
+        }
+
+</style>
+
+
+<div class="container-fluid mt-5">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">
+                        Edit Account
+                 
+                    </h2>
+                </div>
+
+                <p></p>
+                <div class="card-body">
+                    <Alert @ref="alert" />
+                    <EditForm Model="Input" OnValidSubmit="UpdateUser">
+                        <DataAnnotationsValidator />
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="image-preview-container">
+                                    @if (!string.IsNullOrEmpty(imageDataUrl))
+                                    {
+                                        <img src="@imageDataUrl" alt="Profile Image Preview" class="image-preview" />
+                                    }
+                                    else
+                                    {
+                                        <div class="image-preview-placeholder">
+                                            <i class="bi bi-person-fill"></i>
+                                        </div>
+                                    }
+                                    <div class="image-label">Profile Picture</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="imageUpload" class="form-label">Upload Image</label>
+                                    <InputFile OnChange="OnInputFileChange" class="form-control" id="imageUpload" accept="image/*" />
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <InputText @bind-Value="Input.Name" class="form-control" aria-required="true" id="name" @oninput="OnInputChange" />
+                                            <label for="name">Full Name</label>
+                                            <ValidationMessage For="() => Input.Name" class="text-danger" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <InputSelect @bind-Value="Input.Gender" class="form-select" aria-required="true" id="gender" @onchange="OnInputChange">
+                                                <option value="">Select Gender</option>
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                                <option value="PreferNotToSay">Prefer not to say</option>
+                                            </InputSelect>
+                                            <label for="gender">Gender</label>
+                                            <ValidationMessage For="() => Input.Gender" class="text-danger" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <InputText @bind-Value="Input.Email" class="form-control" aria-required="true" id="email" readonly />
+                                            <label for="email">Email Address</label>
+                                            <ValidationMessage For="() => Input.Email" class="text-danger" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-floating">
+                                            <InputSelect @bind-Value="Input.BirthMonth" class="form-select" aria-required="true" id="birthMonth" @onchange="OnInputChange">
+                                                <option value="">Month</option>
+                                                @for (int i = 1; i <= 12; i++)
+                                                {
+                                                    <option value="@i">@System.Globalization.DateTimeFormatInfo.CurrentInfo.GetMonthName(i)</option>
+                                                }
+                                            </InputSelect>
+                                            <label for="birthMonth">Birth Month</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-floating">
+                                            <InputSelect @bind-Value="Input.BirthDay" class="form-select" aria-required="true" id="birthDay" @onchange="OnInputChange">
+                                                <option value="">Day</option>
+                                                @for (int i = 1; i <= 31; i++)
+                                                {
+                                                    <option value="@i">@i</option>
+                                                }
+                                            </InputSelect>
+                                            <label for="birthDay">Birth Day</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-floating">
+                                            <InputSelect @bind-Value="Input.BirthYear" class="form-select" aria-required="true" id="birthYear" @onchange="OnInputChange">
+                                                <option value="">Year</option>
+                                                @for (int i = DateTime.Now.Year; i >= DateTime.Now.Year - 100; i--)
+                                                {
+                                                    <option value="@i">@i</option>
+                                                }
+                                            </InputSelect>
+                                            <label for="birthYear">Birth Year</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <ValidationMessage For="() => Input.Birthday" class="text-danger" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <InputText @bind-Value="Input.Role" class="form-control" aria-required="true" id="role" readonly />
+                                            <label for="role">User Role</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p></p>
+                        <div style="background-color: #f8d7da; color: #721c24; padding: 15px; border-left: 5px solid #f5c6cb; border-radius: 5px; font-style: italic;">
+                            <span>Data Management: Users are responsible for ensuring the accuracy of their personal information. Any changes to user data must be in compliance with applicable laws and university policies.</span>
+                        </div>
+                        <p></p>
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-primary btn-lg w-100" disabled="@(!hasChanges)">Save Changes</button>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-secondary btn-lg w-100" @onclick="NavigateBack">Cancel</button>
+                            </div>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Alert alert;
+    private InputModel Input { get; set; } = new();
+    private InputModel OriginalInput { get; set; } = new();
+    private byte[] imageData;
+    private string imageDataUrl;
+    private User currentUser;
+    private bool hasChanges = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the current user's email (you might need to implement this in UserService)
+        string currentUserEmail = userService.GetCurrentUserEmail();
+        currentUser = userService.GetUserByEmail(currentUserEmail);
+
+        if (currentUser != null)
+        {
+            Input.Name = OriginalInput.Name = currentUser.Name;
+            Input.Gender = OriginalInput.Gender = currentUser.Gender;
+            Input.Email = OriginalInput.Email = currentUser.Email;
+            Input.Role = OriginalInput.Role = currentUser.Role;
+
+            // Parse the birthday
+            if (DateTime.TryParse(currentUser.Birthday, out DateTime birthday))
+            {
+                Input.BirthMonth = OriginalInput.BirthMonth = birthday.Month;
+                Input.BirthDay = OriginalInput.BirthDay = birthday.Day;
+                Input.BirthYear = OriginalInput.BirthYear = birthday.Year;
+            }
+
+            // Load the image if it exists
+            if (currentUser.Image != null && currentUser.Image.Length > 0)
+            {
+                imageData = currentUser.Image;
+                var base64 = Convert.ToBase64String(imageData);
+                imageDataUrl = $"data:image/jpeg;base64,{base64}";
+            }
+        }
+    }
+
+    private void NavigateBack()
+    {
+        navigationManager.NavigateTo("/account");
+    }
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            var resizedFile = await file.RequestImageFileAsync("image/jpeg", 800, 600);
+            var buffer = new byte[resizedFile.Size];
+            await resizedFile.OpenReadStream().ReadAsync(buffer);
+            imageData = buffer;
+
+            // Convert the image data to a base64-encoded string
+            var base64 = Convert.ToBase64String(imageData);
+            imageDataUrl = $"data:{resizedFile.ContentType};base64,{base64}";
+
+            // Set hasChanges to true when an image is uploaded
+            hasChanges = true;
+
+            // Force a re-render
+            StateHasChanged();
+        }
+    }
+
+    private void OnInputChange()
+    {
+        // Compare current input with original input to determine if there are changes
+        hasChanges = !Input.Equals(OriginalInput) || imageData != null;
+        StateHasChanged();
+    }
+
+    private async Task UpdateUser()
+    {
+        try
+        {
+            // Combine birthday components
+            Input.Birthday = $"{Input.BirthYear}-{Input.BirthMonth:D2}-{Input.BirthDay:D2}";
+
+            // Update user information
+            currentUser.Name = Input.Name;
+            currentUser.Gender = Input.Gender;
+            currentUser.Birthday = Input.Birthday;
+            currentUser.Image = imageData;
+
+            // Update the user in the database (you'll need to implement this method in UserService)
+            bool result = userService.UpdateUser(currentUser);
+
+            if (result)
+            {
+                Console.WriteLine("User updated successfully");
+                alert.ShowSuccess("User information updated successfully!");
+                // Update OriginalInput to reflect the new saved state
+                OriginalInput = new InputModel(Input);
+                hasChanges = false;
+            }
+            else
+            {
+                Console.WriteLine("Update failed");
+                alert.ShowFailed("Update failed. Please try again.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred during update: {ex.Message}");
+            alert.ShowFailed($"An error occurred: {ex.Message}");
+        }
+    }
+
+    private sealed class InputModel : IEquatable<InputModel>
+    {
+        [Required(ErrorMessage = "Name is required")]
+        [StringLength(100, ErrorMessage = "Name must be between 2 and 100 characters", MinimumLength = 2)]
+        public string Name { get; set; } = "";
+
+        [Required(ErrorMessage = "Gender is required")]
+        public string Gender { get; set; } = "";
+
+        [Required(ErrorMessage = "Birth month is required")]
+        public int BirthMonth { get; set; }
+
+        [Required(ErrorMessage = "Birth day is required")]
+        public int BirthDay { get; set; }
+
+        [Required(ErrorMessage = "Birth year is required")]
+        public int BirthYear { get; set; }
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "User role is required")]
+        public string Role { get; set; } = "";
+
+        public string Birthday { get; set; } = "";
+
+        public InputModel() { }
+
+        public InputModel(InputModel other)
+        {
+            Name = other.Name;
+            Gender = other.Gender;
+            BirthMonth = other.BirthMonth;
+            BirthDay = other.BirthDay;
+            BirthYear = other.BirthYear;
+            Email = other.Email;
+            Role = other.Role;
+            Birthday = other.Birthday;
+        }
+
+        public bool Equals(InputModel other)
+        {
+            if (other == null)
+                return false;
+
+            return Name == other.Name &&
+                   Gender == other.Gender &&
+                   BirthMonth == other.BirthMonth &&
+                   BirthDay == other.BirthDay &&
+                   BirthYear == other.BirthYear &&
+                   Email == other.Email &&
+                   Role == other.Role;
+        }
+    }
+}

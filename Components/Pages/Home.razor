@@ -1,0 +1,509 @@
+﻿@page "/home"
+@using Microsoft.AspNetCore.Components.Rendering
+@using System.Globalization
+
+@inject IApplicantService ApplicantService
+@inject ICentralDataService CentralDataService
+@inject IPendingService PendingService
+@inject ISchoolYearService SchoolYearService
+
+@rendermode InteractiveServer
+
+
+<PageTitle>Home</PageTitle>
+
+
+<div class="scrollable-container">
+    <div class="dashboard-container">
+        <div class="stats-container">
+            <a href="/applicants" class="stat-card">
+                <div class="stat-content">
+                    <span class="bi bi-person-plus icon"></span>
+                    <div>
+                        <h4>Total No. of Applicants:</h4>
+                        <p>@applicantCount</p>
+                    </div>
+                </div>
+                <span class="bi bi-people background-icon"></span>
+            </a>
+
+            <a href="/pendings" class="stat-card">
+                <div class="stat-content">
+                    <span class="bi bi-check-circle icon"></span>
+                    <div>
+                        <h4>Total No. of Approved:</h4>
+                        <p>@approvedCount</p>
+                    </div>
+                </div>
+                <span class="bi bi-hand-thumbs-up background-icon"></span>
+            </a>
+
+            <a href="/central_datas" class="stat-card">
+                <div class="stat-content">
+                    <span class="bi bi-server icon"></span>
+                    <div>
+                        <h4>Total No. of Holders:</h4>
+                        <p>@holderCount</p>
+                    </div>
+                </div>
+                <span class="bi bi-database background-icon"></span>
+            </a>
+        </div>
+
+        <div class="chart-and-report-wrapper">
+            <div class="chart-and-report-container">
+                <div class="chart-container">
+                    <SfAccumulationChart Width="420px" Height="430px" Background="transparent">
+                        <AccumulationChartSeriesCollection>
+                            <AccumulationChartSeries DataSource="@chartData" XName="Category" YName="Count" Palettes="@palettes">
+                                <AccumulationDataLabelSettings Position="AccumulationLabelPosition.Outside" Name="Browser" Visible="true">
+                                    <Template>
+                                        @{
+                                            var data = context as AccumulationChartDataPointInfo;
+                                        }
+                                        <table>
+                                            <tr>
+                                                <td align="center" style="background-color: transparent; font-size: 10px; color: #4169e1; font-weight: bold; padding: 3px"> @data.X :</td>
+                                                <td align="center" style="background-color: transparent; font-size: 10px; color: #4169e1 ; font-weight: bold; padding: 3px"> @data.Y</td>
+                                            </tr>
+                                        </table>
+                                    </Template>
+                                </AccumulationDataLabelSettings>
+                            </AccumulationChartSeries>
+                        </AccumulationChartSeriesCollection>
+                        <p></p>
+                        <p></p>
+                        <AccumulationChartLegendSettings Visible="true" Position="LegendPosition.Bottom" />
+                    </SfAccumulationChart>
+                </div>
+                <div class="report-container">
+                    <h3>Current School Year:</h3>
+                    <p class="school-year-section">
+                        <strong style="color: orange">S.Y</strong>
+                        <input type="text" @bind="schoolYear" disabled="@(isEditable ? null : "disabled")" class="school-year-input" />
+
+                        <button @onclick="SaveSchoolYear" disabled="@(!isSaveEnabled)" class="save-btn">Save</button>
+                        <button @onclick="ModifySchoolYear" disabled="@(isEditable)" class="modify-btn">Modify</button>
+                    </p>
+
+                    <hr />
+                    <p>Summary Report</p>
+                    <ul>
+                        <li><strong>Total Applicants:</strong> @applicantCount</li>
+                        <li><strong>Approved Applicants:</strong> @approvedCount</li>
+                        <li><strong>Current Holders:</strong> @holderCount</li>
+                    </ul>
+                    <p>
+                        This chart illustrates the distribution of applicants, approved individuals, and current holders 
+                        in our carpass system. It provides a snapshot of the system's current status, helping us 
+                        assess its progress and impact.
+                    </p>
+                    <p>
+                        The data suggests that @(((double)applicantCount / totalCount * 100).ToString("F1"))% of the total
+                        are applicant, @(((double)approvedCount / totalCount * 100).ToString("F1"))% of the total
+                        are approved, and @(((double)holderCount / totalCount * 100).ToString("F1"))% are current holders.
+                    </p>          
+                    <hr />
+                    <p>Generated on @DateTime.Now.ToString("dddd, MMMM dd, yyyy, hh:mm:ss tt", CultureInfo.InvariantCulture)</p>
+                </div>
+            </div>
+        </div>
+        <div class="procedures-wrapper">
+            <div class="procedures-container">
+                <div class="header">
+                    <h2>Procedure for Obtaining a Vehicle Car Pass</h2>
+                    <h3>CRR-SYSTEM at Central Philippine University</h3>
+                </div>
+                <div class="section">
+                    <h4>Step 1: Registration</h4>
+                    <div class="subsection">
+                        <h5>Online Registration</h5>
+                        <ol>
+                            <li>Access the CRR-SYSTEM portal from any electronic device.</li>
+                            <li>Complete the online registration form by entering all the required information, including personal details, vehicle details, and contact information.</li>
+                            <li>Submit the form.</li>
+                        </ol>
+                    </div>
+                    <div class="subsection">
+                        <h5>On-site Registration</h5>
+                        <ol>
+                            <li>Visit the registration kiosk located within the university campus.</li>
+                            <li>Use the kiosk to fill out the necessary registration form with personal and vehicle details.</li>
+                            <li>Submit the form at the kiosk.</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="section">
+                    <h4>Step 2: Submission of Required Documents</h4>
+                    <p>After submitting the registration form, a pop-up message or notification will appear on the screen, guiding the applicant through the next steps. The following documents must be submitted in person as per the instructions provided:</p>
+                    <ul>
+                        <li>Photocopy of Vehicle's LTO Official Receipt (OR).</li>
+                        <li>Photocopy of Vehicle's LTO Certificate of Registration (CR).</li>
+                        <li>Photocopy of Driver's License.</li>
+                        <li>Photocopy of Affidavit of Undertaking or Proof of Ownership of Vehicle. (for a vehicle not owned by the applicant or one with transfer of ownership to applicant still in process)</li>
+                        <li>Photocopy of Student's Current Registration Form (RF). (for CPU students and Parents/Guardians of CPU students Only)</li>
+                        <li>Photocopy of Student's Identification Card</li>
+                        <li>Photo of Endorsement from Mr. Ernie Solatorio. (for CPU Tenants only)</li>
+                    </ul>
+                    <p class="note">Note: All documents must be clear and legible.</p>
+                </div>
+                <div class="section">
+                    <h4>Step 3: Payment Process</h4>
+                    <p>The applicant must proceed with the payment for the type of car pass they wish to avail. Payments are made inside the campus at designated payment centers. The types of car passes available will be listed, and the applicant can choose the one that best suits their needs.</p>
+                </div>
+                <div class="section">
+                    <h4>Step 4: Verification and Issuance of Car Pass</h4>
+                    <ol>
+                        <li>The applicant must present the payment receipt to the campus security staff.</li>
+                        <li>The security staff will verify the payment and documentation.</li>
+                        <li>Upon verification, the appropriate car pass sticker will be applied to the applicant's vehicle.</li>
+                    </ol>
+                </div>
+                <div class="section">
+                    <h4>Completion</h4>
+                    <p>Once the car pass sticker is applied to the applicant's vehicle, they are officially a car pass holder. This car pass will allow regulated access to the university's parking facilities, ensuring a smooth and organized parking experience on campus.</p>
+                    <p>For further assistance or any inquiries regarding the CRR-SYSTEM, the applicant should contact the university administration or visit the help desk at the registration kiosk.</p>
+                </div>
+                <hr class="document-line">
+            </div>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 Central Philippine University. All rights reserved.</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private int applicantCount;
+    private int holderCount;
+    private int approvedCount;
+    private int totalCount;
+    private List<ChartData> chartData;
+    private bool isEditable = false;
+    private bool isSaveEnabled = false;
+    private string schoolYear = "2024-2025";
+
+    protected override async Task OnInitializedAsync()
+    {
+        applicantCount = (await ApplicantService.GetAllApplicantsAsync()).Count;
+        holderCount = (await CentralDataService.GetAllCentral_DatasAsync()).Count;
+        approvedCount = (await PendingService.GetAllPendingsAsync()).Count;
+        totalCount = applicantCount + holderCount + approvedCount;
+
+        chartData = new List<ChartData>
+        {
+            new ChartData { Category = "Applicants", Count = applicantCount },
+            new ChartData { Category = "Approved", Count = approvedCount },
+            new ChartData { Category = "Holders", Count = holderCount }
+        };
+
+        // Load the school year from the service
+        schoolYear = await SchoolYearService.GetSchoolYearAsync();
+        if (string.IsNullOrEmpty(schoolYear))
+        {
+            schoolYear = "ex: 2023-2024";
+        }
+    }
+
+    private async Task SaveSchoolYear()
+    {
+        isEditable = false;
+        isSaveEnabled = false;
+
+        // Save the school year using the service
+        await SchoolYearService.SaveSchoolYearAsync(schoolYear);
+
+        // Call StateHasChanged to update the UI
+        StateHasChanged();
+    }
+
+    public class ChartData
+    {
+        public string Category { get; set; }
+        public double Count { get; set; }
+    }
+    public String[] palettes = new String[] { "#ecd540 ", "#00bfff ", "#4169e1" };
+
+
+    private void ModifySchoolYear()
+    {
+        isEditable = true;
+        isSaveEnabled = true;
+    }
+}
+
+<style>
+    .procedures-wrapper {
+        background-color: white;
+        padding: 40px;
+        border-radius: 10px;
+        margin-top: 30px;
+
+    }
+
+   
+
+    .procedures-container {
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Increased shadow for visibility */
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #4169e1;
+        padding-bottom: 20px;
+        background-color: lightblue; /* Light green background */
+        margin: -30px -30px 30px -30px; /* Negative margin to extend to edges */
+        padding: 30px; /* Add padding to compensate for negative margin */
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+    }
+
+        .header h2 {
+            color: #4169e1;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .header h3 {
+            color: #333;
+            font-size: 18px;
+        }
+
+    .section {
+        margin-bottom: 30px;
+    }
+
+        .section h4 {
+            color: #4169e1;
+            font-size: 20px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+    .subsection h5 {
+        color: #333;
+        font-size: 18px;
+        margin-top: 15px;
+        margin-bottom: 10px;
+    }
+
+    .section p, .section li {
+        color: #333;
+        line-height: 1.6;
+        font-size: 16px;
+    }
+
+    .section ul, .section ol {
+        margin-bottom: 15px;
+        padding-left: 30px;
+    }
+
+    .note {
+        font-style: italic;
+        color: #666;
+    }
+
+    .footer {
+        text-align: center;
+        margin-top: 20px;
+        padding-top: 10px;
+        border: 1px solid #ddd;
+        border-bottom: 3px solid yellow;
+        font-size: 13px;
+        color: darkgrey;
+        background-color: #25337a;
+    }
+    .scrollable-container {
+        padding-top: 0px; /* Ensure space for the top navigation bar */
+    }
+
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        position: relative; /* Ensure relative positioning for z-index usage */
+        z-index: 0; /* Ensure the dashboard container is behind the stat cards */
+    }
+
+    .dashboard-title {
+        text-align: center;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .current-year {
+        text-align: center;
+        color: #666;
+        font-size: 1.2em;
+        margin-bottom: 30px;
+    }
+
+    .stats-container {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px; /* Reduce bottom margin to remove extra space */
+    }
+
+    .chart-and-report-wrapper {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        position: relative; /* Ensure relative positioning for z-index usage */
+        z-index: 1; /* Ensure the wrapper is above the dashboard container */
+    }
+
+    .chart-and-report-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .chart-container,
+    .report-container {
+        background-color: #fff;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 48%; /* Adjust width to ensure they fit nicely within the wrapper */
+    }
+
+    .report-container h3 {
+        color: #4169e1;
+        margin-bottom: 15px;
+    }
+
+    .report-container ul {
+        list-style-type: none;
+        padding-left: 0;
+        margin-bottom: 15px;
+    }
+
+    .report-container li {
+        margin-bottom: 10px;
+    }
+
+    .report-container p {
+        color: #555;
+        line-height: 1.6;
+    }
+
+    .stat-card {
+        background-color: #4169e1;
+        color: #ffffff;
+        padding: 30px;
+        border-bottom: 5px solid yellow;
+        border-radius: 15px;
+        box-shadow: 0 5px 10px rgba(255, 255, 255, 0.3); /* White shadow */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: calc(33.33% - 20px);
+        height: 200px;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s;
+        text-decoration: none;
+        z-index: 2; /* Ensure stats cards are above other content */
+    }
+
+    .stat-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(255, 255, 255, 0.4);
+        }
+
+    .stat-card .icon {
+        font-size: 65px;
+        z-index: 3; /* Ensure icon is above other content within stat card */
+        position: absolute;
+        top: 50%;
+        left: 25%;
+        transform: translate(-50%, -50%);
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .stat-card .background-icon {
+        font-size: 250px;
+        color: rgba(255, 255, 255, 0.05);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1; /* Ensure background icon is behind other content within stat card */
+    }
+
+    .stat-card h4 {
+        margin: 0 0 10px 0;
+        font-size: 1.2em;
+        text-align: right;
+        z-index: 3; /* Ensure title is above other content within stat card */
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .stat-card p {
+        margin: 0;
+        font-size: 2.5em;
+        font-weight: bold;
+        text-align: right;
+        z-index: 3; /* Ensure value is above other content within stat card */
+        color: #ffffff;
+    }
+
+    .stat-content {
+        position: relative;
+        z-index: 3; /* Ensure content within stat card is above other content */
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        width: 100%;
+    }
+
+    .stat-content > div {
+        margin-left: 20px;
+    }
+
+    .school-year-section {
+        display: flex;
+        align-items: center;
+        font-weight: bold;
+    }
+
+    .school-year-input {
+        background-color: transparent;
+        border: none;
+        color: orangered; /* Darker golden color */
+        font-weight: bold;
+        margin-left: 10px;
+        margin-right: 20px;
+        font-size: 20px; /* Increased font size for better visibility */
+    }
+
+    .save-btn, .modify-btn {
+        background-color: #B8860B; /* Dark goldenrod */
+        color: #fff;
+        border: none;
+        padding: 8px 15px;
+        margin-left: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        border-radius: 5px;
+        font-size: 14px; /* Increased font size */
+        transition: background-color 0.3s ease;
+    }
+
+        .save-btn:disabled, .modify-btn:disabled {
+            background-color: #A9A9A9; /* Dark gray for disabled state */
+            cursor: not-allowed;
+        }
+
+        .save-btn:hover:not(:disabled), .modify-btn:hover:not(:disabled) {
+            background-color: #A0522D; /* Darker hover effect */
+        }
+
+</style>

@@ -1,0 +1,60 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inherits LayoutComponentBase
+@inject AuthenticationStateProvider auth
+
+<div class="page">
+    <CascadingAuthenticationState>
+        <AuthorizeView>
+            <Authorized>
+                <div class="sidebar">
+                    <NavMenu />
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <!-- Content for unauthorized users can go here if needed -->
+            </NotAuthorized>
+        </AuthorizeView>
+    </CascadingAuthenticationState>
+
+    <main>
+        <div class="top-row px-4 d-flex flex-column justify-content-center align-items-center">
+            <br />
+            <h3 class="fw-bold" style="color: #203354">Central Philippine University</h3>
+            <p class="fw-bolder" style="color: #203354">Carpass Register and Renewal</p>
+        </div>
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@code {
+    public string email { get; set; }
+    public string role { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await auth.GetAuthenticationStateAsync();
+        var user = state.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            email = user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
+            role = user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role)?.Value;
+        }
+        else
+        {
+            email = string.Empty;
+            role = string.Empty;
+        }
+
+        StateHasChanged(); // Ensure UI updates with the authentication state
+    }
+}

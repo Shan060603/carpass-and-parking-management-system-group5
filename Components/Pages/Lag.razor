@@ -1,0 +1,258 @@
+﻿@page "/lag"
+@using System.Security.Claims
+@using Carpass_Profilling.Data
+@using Carpass_Profilling.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@inject UserService UserService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<button class="logout-button" @onclick="ShowModal">
+    <i class="bi bi-box-arrow-right"></i>
+    <span>Logout</span>
+</button>
+
+<div class="modal-backdrop @(_showModal ? "show" : "")" @onclick="CancelLogout">
+    <div class="modal-dialog @(_showModal ? "show" : "")" @onclick:stopPropagation>
+        @if (_isLoggingOut)
+        {
+            <div class="logout-progress">
+                <div class="pulse-ring"></div>
+                <p>Signing out...</p>
+            </div>
+        }
+        else
+        {
+            <div class="modal-content">
+                <div class="modal-icon">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <div class="modal-header">
+                    <h3>Sign Out</h3>
+                    <p>Are you sure you want to sign out?</p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-cancel" @onclick="CancelLogout">Stay Signed In</button>
+                    <button class="btn-confirm" @onclick="ConfirmLogout">Sign Out</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    /* Base Variables */
+    :root {
+        --primary: #4f46e5;
+        --primary-hover: #4338ca;
+        --danger: #ef4444;
+        --danger-hover: #dc2626;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+    }
+
+    /* Logout Button */
+    .logout-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        color: var(--gray-700);
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .logout-button:hover {
+        background: var(--gray-100);
+        color: var(--gray-800);
+    }
+
+    /* Modal Backdrop */
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(4px);
+        display: grid;
+        place-items: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 50;
+    }
+
+    .modal-backdrop.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Modal Dialog */
+    .modal-dialog {
+        background: white;
+        border-radius: 1rem;
+        width: 90%;
+        max-width: 400px;
+        transform: scale(0.95) translateY(10px);
+        opacity: 0;
+        transition: all 0.3s ease;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+                    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .modal-dialog.show {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+
+    /* Modal Content */
+    .modal-content {
+        padding: 1.5rem;
+    }
+
+    .modal-icon {
+        width: 3rem;
+        height: 3rem;
+        background: var(--primary);
+        color: white;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 1.5rem;
+    }
+
+    .modal-icon i {
+        font-size: 1.25rem;
+    }
+
+    .modal-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-header h3 {
+        color: var(--gray-800);
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-header p {
+        color: var(--gray-600);
+        font-size: 0.875rem;
+    }
+
+    /* Modal Actions */
+    .modal-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .btn-cancel, .btn-confirm {
+        padding: 0.625rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-cancel {
+        background: var(--gray-100);
+        color: var(--gray-700);
+        border: 1px solid var(--gray-200);
+    }
+
+    .btn-cancel:hover {
+        background: var(--gray-200);
+        color: var(--gray-800);
+    }
+
+    .btn-confirm {
+        background: var(--danger);
+        color: white;
+        border: none;
+    }
+
+    .btn-confirm:hover {
+        background: var(--danger-hover);
+    }
+
+    /* Logout Progress */
+    .logout-progress {
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .logout-progress p {
+        color: var(--gray-600);
+        font-size: 0.875rem;
+        margin-top: 1rem;
+    }
+
+    .pulse-ring {
+        position: relative;
+        width: 2.5rem;
+        height: 2.5rem;
+        background: var(--primary);
+        border-radius: 50%;
+        margin: 0 auto;
+    }
+
+    .pulse-ring::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: var(--primary);
+        animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @@keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.5);
+            opacity: 0;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 0;
+        }
+    }
+</style>
+
+@code {
+    private bool _showModal = false;
+    private bool _isLoggingOut = false;
+
+    private void ShowModal()
+    {
+        _showModal = true;
+    }
+
+    private void CancelLogout()
+    {
+        _showModal = false;
+        _isLoggingOut = false;
+    }
+
+    private async Task ConfirmLogout()
+    {
+        _isLoggingOut = true;
+        StateHasChanged();
+        await Task.Delay(2000);
+        NavigationManager.NavigateTo("/logout");
+    }
+}

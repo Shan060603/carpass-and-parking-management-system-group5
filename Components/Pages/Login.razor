@@ -1,0 +1,232 @@
+﻿@page "/login"
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using Carpass_Profilling.Components.Middleware
+@using Carpass_Profilling.Components.Shared
+@using Carpass_Profilling.Data
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Authorization
+@inject UserService userService
+@inject NavigationManager nav
+@attribute [AllowAnonymous]
+
+<style>
+    /* Set the body background color */
+    body {
+        background-color: #203354;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(32, 51, 84, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    @@keyframes zoomIn {
+        from {
+            transform: scale(0.5);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .login-container {
+        background-color: #ffffff;
+        border-radius: 20px;
+        overflow: hidden;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 0 20px rgba(252, 198, 12, 0.5);
+        animation: zoomIn 0.8s ease forwards; /* Adjusted duration and added easing */
+    }
+
+    .login-header {
+        background-color: #FCC60C;
+        padding: 30px;
+        text-align: center;
+    }
+
+    .login-logo {
+        width: 100%;
+        height: 150px;
+        background-image: url('Images/Logo.png');
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    .login-body {
+        padding: 40px;
+        text-align: center;
+    }
+
+    h1 {
+        color: #203354;
+        margin-bottom: 30px;
+        font-size: 2.2rem;
+        font-weight: 600;
+    }
+
+    .form-control {
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #FCC60C;
+        box-shadow: 0 0 0 0.2rem rgba(252, 198, 12, 0.25);
+    }
+
+    .btn-login {
+        background-color: #203354;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        width: 100%;
+        transition: all 0.3s ease;
+        margin-top: 10px;
+    }
+
+    .btn-login:hover {
+        background-color: #FCC60C;
+        color: #203354;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(252, 198, 12, 0.3);
+    }
+
+    .text-danger {
+        color: #dc3545;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+
+    .loading-spinner {
+        display: none;
+    }
+
+    .loading-active .loading-spinner {
+        display: inline-block;
+        margin-left: 10px;
+        width: 25px;
+        height: 25px;
+        border: 3px solid #203354;
+        border-top-color: #FCC60C;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @@keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+
+<div class="modal-overlay">
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-logo"></div>
+        </div>
+        <div class="login-body">
+            <h1>LOG IN</h1>
+            <Alert @ref="alert" />
+            <EditForm Model="Input" method="post" OnValidSubmit="OnLogin" FormName="Login">
+                <DataAnnotationsValidator />
+                <div class="form-floating">
+                    <InputText @bind-Value="Input.Email" class="form-control" aria-required="true" placeholder="Email" />
+                    <label for="email" class="form-label">Email</label>
+                    <ValidationMessage For="() => Input.Email" class="text-danger" />
+                </div>
+                <p></p>
+                <div class="form-floating">
+                    <InputText type="password" @bind-Value="Input.Password" class="form-control" aria-required="true" placeholder="Password" />
+                    <label for="password" class="form-label">Password</label>
+                    <ValidationMessage For="() => Input.Password" class="text-danger" />
+                </div>
+                <div>
+                    <button type="submit" class="btn-login" disabled="@isLoading">
+                        Sign In
+                        <span class="loading-spinner" style="@(isLoading ? "display: inline-block;" : "display: none;")"></span>
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Alert alert;
+    private bool isLoading = false;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    public async Task OnLogin()
+    {
+        isLoading = true; // Start loading
+        StateHasChanged();
+
+        // Simulate delay for loading effect (optional)
+        await Task.Delay(1500); // Optional: Add a delay
+
+        var user = userService.Verify(Input.Email, Input.Password);
+        if (user is null)
+        {
+            alert.ShowFailed("Invalid Email or Password");
+            isLoading = false; // Stop loading
+            StateHasChanged();
+            return;
+        }
+
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, user.Email),
+            new Claim(ClaimTypes.Role, user.Role),
+        };
+
+        var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimIdentity);
+        Guid key = Guid.NewGuid();
+        AuthMiddleware.Logins[key] = claimsPrincipal;
+
+        isLoading = false; // Stop loading before redirect
+        StateHasChanged();
+
+        nav.NavigateTo($"/Login?key={key}", true);
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+    }
+}

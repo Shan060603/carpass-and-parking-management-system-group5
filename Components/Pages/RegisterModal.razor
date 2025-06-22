@@ -1,0 +1,38 @@
+﻿@page "/registermodal"
+@inject NavigationManager NavigationManager
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<div class="d-flex justify-content-center align-items-center">
+    <div class="container-box text-center p-5 mt-5">
+        <h5 class="mb-4">Type of Applicant</h5>
+        <p>Please select the type of applicant:</p>
+        <button type="button" class="btn btn-primary me-2 btn-equal" @onclick="NavigateToParent">Non-Faculty and Staff Applicants</button>
+        <button type="button" class="btn btn-secondary btn-equal" @onclick="NavigateToFaculty">Faculty and Staff Members</button>
+    </div>
+</div>
+
+<style>
+    .container-box {
+        background-color: #f8f9fa; /* Light grey background */
+        border-radius: 15px; /* Rounded edges */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        max-width: 600px; /* Increased maximum width */
+        width: 100%; /* Full width */
+    }
+
+    .btn-equal {
+        width: 200px; /* Set a fixed width for both buttons */
+    }
+</style>
+
+@code {
+    void NavigateToParent()
+    {
+        NavigationManager.NavigateTo("/edit-applicant"); // Replace with the actual route for the Parent page
+    }
+
+    void NavigateToFaculty()
+    {
+        NavigationManager.NavigateTo("/edit-faculty"); // Replace with the actual route for the Faculty page
+    }
+}

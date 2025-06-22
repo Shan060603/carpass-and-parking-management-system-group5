@@ -1,0 +1,161 @@
+﻿@page "/about"
+@page "/about/index"
+
+<style>
+    :root {
+        --primary-color: #003366;
+        --secondary-color: #f8f9fa;
+        --accent-color: #ffd700;
+        --text-color: #333333;
+        --border-color: #e0e0e0;
+    }
+
+    .about-page {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        background-color: var(--secondary-color);
+    }
+
+    .terms-container {
+        max-width: 1000px;
+        margin: 40px auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 3px solid orange;
+        padding-bottom: 20px;
+        background-color: #4169e1;
+        margin: -30px -30px 30px -30px;
+        padding: 20px;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+    }
+
+        .header h1 {
+            font-size: 32px;
+            color: white;
+        }
+
+        .header h2 {
+            font-size: 20px;
+            font-weight: normal;
+            opacity: 0.8;
+            color: #003366;
+        }
+
+    .content {
+        padding: 40px;
+    }
+
+    .section {
+        margin-bottom: 30px;
+    }
+
+        .section h3 {
+            color: var(--primary-color);
+            font-size: 24px;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .section p, .section li {
+            margin-bottom: 15px;
+        }
+
+    .footer {
+        text-align: center;
+        margin-top: 20px;
+        padding-top: 10px;
+        border: 1px solid #ddd;
+        border-bottom: 3px solid yellow;
+        font-size: 14px;
+        color: darkgrey;
+        background-color: #25337a;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .procedures-wrapper {
+        background-color: #f7f7f7;
+        padding: 40px;
+        border-radius: 10px;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .procedures-container {
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+</style>
+
+<div class="about-page">
+    <div class="procedures-wrapper">
+        <div class="procedures-container">
+            <header class="header">
+                <h1>Terms and Policies</h1>
+            </header>
+
+            <div class="content">
+                <section class="section">
+                    <h3>1. Acceptance of Terms</h3>
+                    <p>By accessing or using the Website, you agree to be bound by these Terms and Conditions and our Privacy Policy. If you do not agree with any part of these Terms and Conditions or the Privacy Policy, please do not use the Website.</p>
+                </section>
+
+                <section class="section">
+                    <h3>2. Data Collection and Use</h3>
+                    <p>We collect personal information such as your name, contact details, vehicle information, and other relevant data to process your car pass registration or renewal application and provide the services offered through this Website. Any information you provide will be used solely for the purposes described and in compliance with the Data Privacy Act of 2012 (Republic Act No. 10173) and other applicable laws and regulations.</p>
+                </section>
+
+                <section class="section">
+                    <h3>3. Data Security</h3>
+                    <p>We implement reasonable security measures to protect the personal information you submit from unauthorized access, disclosure, alteration, or destruction. However, no method of transmission over the Internet or electronic storage is 100% secure. Therefore, while we strive to use commercially acceptable means to protect your personal information, we cannot guarantee its absolute security. You acknowledge and agree that any transmission of personal information is at your own risk.</p>
+                </section>
+
+                <section class="section">
+                    <h3>4. User Responsibilities</h3>
+                    <p>Users are responsible for providing accurate and complete information when using this Website. If you become aware of any unauthorized use of your personal information or any other breach of security, you must notify us immediately.</p>
+                </section>
+
+                <section class="section">
+                    <h3>5. Admin Responsibilities</h3>
+                    <p><strong>Admin Access and Use:</strong> Administrative access to the Website is restricted to authorized personnel only. Admins are responsible for maintaining the confidentiality of their login credentials and for all activities conducted under their accounts. Unauthorized access or use of admin functionalities is strictly prohibited and may result in disciplinary action.</p>
+                    <p><strong>Data Management:</strong> Admins are responsible for ensuring the accuracy, integrity, and confidentiality of the data managed through the Website. Any changes to user data, system settings, or content must be properly documented and performed in compliance with applicable laws and university policies.</p>
+                    <p><strong>System Monitoring:</strong> The university reserves the right to monitor and audit admin activities on the Website to ensure compliance with these Terms and Conditions and to maintain the security and integrity of the system. Any suspicious activity or potential security breaches must be reported immediately to the IT department.</p>
+                </section>
+
+                <section class="section">
+                    <h3>6. General Terms</h3>
+                    <p><strong>Limitation of Liability:</strong> In no event shall Central Philippine University or its affiliates be liable for any direct, indirect, incidental, consequential, or special damages arising out of or in any way connected with your access to or use of this Website or the services offered.</p>
+                    <p><strong>Intellectual Property:</strong> The Website and its entire contents are owned by Central Philippine University and are protected by Philippine and international intellectual property laws.</p>
+                    <p><strong>Modifications:</strong> We reserve the right to modify or change these Terms and Conditions at any time without prior notice.</p>
+                    <p><strong>Governing Law:</strong> These Terms and Conditions shall be governed by and construed in accordance with the laws of the Republic of the Philippines.</p>
+                    <p><strong>Indemnification:</strong> You agree to indemnify, defend, and hold harmless Central Philippine University from all claims, losses, expenses, damages, and costs resulting from any violation of these Terms and Conditions.</p>
+                    <p><strong>Severability:</strong> If any provision of these Terms and Conditions is found to be unlawful, void, or unenforceable, that provision shall be deemed severable and shall not affect the validity of any remaining provisions.</p>
+                    <p><strong>Entire Agreement:</strong> These Terms and Conditions, along with the Privacy Policy, constitute the entire agreement between you and Central Philippine University regarding the use of the Website.</p>
+                </section>
+
+                <section class="section">
+                    <h3>7. Contact Information</h3>
+                    <p>If you have any questions about these Terms and Conditions, please contact us at [contact information].</p>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2024 Central Philippine University. All rights reserved.</p>
+    </footer>
+</div>

@@ -1,0 +1,25 @@
+﻿@page "/accessdenied"
+@using Microsoft.AspNetCore.Authorization
+@inject NavigationManager NavigationManager
+@attribute [AllowAnonymous]
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="card-title text-danger">Access Denied</h1>
+                    <p class="card-text">You do not have permission to access this page.</p>
+                    <button class="btn btn-primary" @onclick="GoToLogin">Go to Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private void GoToLogin()
+    {
+        NavigationManager.NavigateTo("/login");
+    }
+}
