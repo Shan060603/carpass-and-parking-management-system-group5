@@ -1,14 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Carpass_Profilling.Models
 {
-[Table("central_datas")]
-	public class Central_Data
-	{
+    [Table("central_datas")]
+    public class Central_Data
+    {
         [Key]
         public int central_Id { get; set; }
+
+        // Foreign key to Pending
+        [ForeignKey("Pending")]
         public int? pending_ID { get; set; }
+
         public string? fullname { get; set; }
         public string? type_applicant { get; set; }
         public string? type_carpass { get; set; }
@@ -28,6 +32,7 @@ namespace Carpass_Profilling.Models
         public string? ref_number { get; set; }
         public string? issued_by { get; set; }
         public string? schoolyear { get; set; }
+
         public DateOnly? sub_Date { get; set; }
         public DateOnly? app_Date { get; set; }
         public DateOnly? expiration_Date { get; set; }
@@ -40,6 +45,7 @@ namespace Carpass_Profilling.Models
         public byte[]? Doc6 { get; set; }
         public byte[]? Doc7 { get; set; }
 
-        public Pending Pending { get; set; }
+        // Navigation property
+        public Pending? Pending { get; set; }
     }
 }
