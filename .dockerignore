@@ -1,0 +1,17 @@
+**/.classpath
+**/.dockerignore
+**/.env
+**/.git
+**/.gitignore
+**/.project
+**/.settings
+**/.toolstarget
+**/*.csproj.user
+**/*.dbmdl
+**/bin
+**/obj
+**/node_modules
+Dockerfile
+README.md
+.vscode
+.env
