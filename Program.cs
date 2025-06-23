@@ -86,7 +86,7 @@ if (!app.Environment.IsDevelopment())
         ForwardedHeaders = ForwardedHeaders.XForwardedProto
     });
 
-    app.UseHttpsRedirection();
+    //app.UseHttpsRedirection();
 }
 
 
