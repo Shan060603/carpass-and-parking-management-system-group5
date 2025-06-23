@@ -5,84 +5,47 @@ namespace Carpass_Profilling.Data
 {
     public class DataContext : DbContext
     {
-        public DataContext(DbContextOptions<DataContext> options) : base(options)
-        {
-        }
+        public DataContext(DbContextOptions<DataContext> options) : base(options) { }
 
-        // Authentication-related DbSet
-        public virtual DbSet<User> Users { get; set; }
-
-        // Application-related DbSets
+        public DbSet<User> Users { get; set; }
         public DbSet<Applicant> Applicants { get; set; }
         public DbSet<Pending> Pendings { get; set; }
         public DbSet<Central_Data> Central_Datas { get; set; }
         public DbSet<Schoolyear> Syear { get; set; }
 
-
-        
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.EnableSensitiveDataLogging();
+            optionsBuilder.EnableSensitiveDataLogging(); // for development only
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // User authentication entity configuration
+            // === Table Mapping ===
+            modelBuilder.Entity<User>().ToTable("User");
+            modelBuilder.Entity<Applicant>().ToTable("applicants");
+            modelBuilder.Entity<Pending>().ToTable("pendings");
+            modelBuilder.Entity<Central_Data>().ToTable("central_datas");
+            modelBuilder.Entity<Schoolyear>().ToTable("syear");
+
+            // === User Configuration ===
             modelBuilder.Entity<User>(entity =>
             {
-                entity.HasKey(e => e.Email); // Define the primary key
+                entity.HasKey(e => e.Email);
 
-                entity.ToTable("User"); // Define the table name
-
-                // Define properties with their constraints
-                entity.Property(e => e.Name)
-                    .HasMaxLength(100)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Gender)
-                    .HasMaxLength(100)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Birthday)
-                    .HasMaxLength(100)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Email)
-                    .HasMaxLength(100)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Password)
-                    .HasMaxLength(100)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Role)
-                    .HasMaxLength(10)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Image)
-                    .HasColumnType("longblob"); // Use longblob for MySQL to store large binary objects
+                entity.Property(e => e.Name).HasMaxLength(100).IsUnicode(false);
+                entity.Property(e => e.Gender).HasMaxLength(100).IsUnicode(false);
+                entity.Property(e => e.Birthday).HasMaxLength(100).IsUnicode(false);
+                entity.Property(e => e.Email).HasMaxLength(100).IsUnicode(false);
+                entity.Property(e => e.Password).HasMaxLength(100).IsUnicode(false);
+                entity.Property(e => e.Role).HasMaxLength(10).IsUnicode(false);
+                entity.Property(e => e.Image).HasColumnType("longblob");
             });
 
-
-            // Application data configuration
-            modelBuilder.Entity<Applicant>().HasKey(a => a.kiosk_Id);
-            modelBuilder.Entity<Schoolyear>().HasKey(s => s.Sy_ID);
-
-            modelBuilder.Entity<Pending>()
-                .HasOne(p => p.Applicant)
-                .WithMany(a => a.Pendings)
-                .HasForeignKey(p => p.kiosk_Id)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Central_Data>()
-                .HasOne(cd => cd.Pending)
-                .WithMany()
-                .HasForeignKey(cd => cd.pending_ID)
-                .OnDelete(DeleteBehavior.SetNull);
-
+            // === Applicant Configuration ===
             modelBuilder.Entity<Applicant>(entity =>
             {
+                entity.HasKey(e => e.kiosk_Id);
+
                 entity.Property(e => e.Doc1).HasColumnType("longblob");
                 entity.Property(e => e.Doc2).HasColumnType("longblob");
                 entity.Property(e => e.Doc3).HasColumnType("longblob");
@@ -92,7 +55,33 @@ namespace Carpass_Profilling.Data
                 entity.Property(e => e.Doc7).HasColumnType("longblob");
             });
 
-            // Seed Data for User table
+            // === Schoolyear Configuration ===
+            modelBuilder.Entity<Schoolyear>().HasKey(s => s.Sy_ID);
+
+            // === Pending Configuration ===
+            modelBuilder.Entity<Pending>(entity =>
+            {
+                entity.HasKey(p => p.pending_ID);
+
+                entity.HasOne(p => p.Applicant)
+                    .WithMany(a => a.Pendings)
+                    .HasForeignKey(p => p.kiosk_Id)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // === Central_Data Configuration ===
+            modelBuilder.Entity<Central_Data>(entity =>
+            {
+                entity.HasKey(cd => cd.central_Id);
+
+                entity.HasOne(cd => cd.Pending)
+                    .WithMany()
+                    .HasForeignKey(cd => cd.pending_ID)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // === Seed Data ===
+
             modelBuilder.Entity<User>().HasData(
                 new User
                 {
@@ -100,13 +89,11 @@ namespace Carpass_Profilling.Data
                     Name = "CPU Admin",
                     Gender = "Male",
                     Birthday = "1980-01-01",
-                    Password = "admin123", // Normally you would hash this in production
+                    Password = "admin123",
                     Role = "Admin"
                 }
             );
 
-
-            // Seed Data for other tables
             modelBuilder.Entity<Applicant>().HasData(
                 new Applicant
                 {
@@ -133,6 +120,7 @@ namespace Carpass_Profilling.Data
                 new Pending
                 {
                     pending_ID = 1,
+                    kiosk_Id = 1,
                     fullName = "Allen Miguel L. Vargas",
                     type_Applicant = "CPU Student",
                     course_Grade = "BSCS-3",
@@ -175,7 +163,6 @@ namespace Carpass_Profilling.Data
                     app_Date = new DateOnly(2023, 1, 1)
                 }
             );
-;
         }
     }
 }
