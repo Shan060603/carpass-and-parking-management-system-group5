@@ -26,3 +26,4 @@ jobs:
           branch: gh-pages
           folder: release/wwwroot
           clean: true
+          token: ${{ secrets.GITHUB_TOKEN }}  # 🔥 ADD THIS LINE
