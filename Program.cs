@@ -11,6 +11,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.HttpOverrides;
 
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Kestrel server options
@@ -29,12 +30,14 @@ builder.Services.AddRazorComponents()
 builder.Services.AddControllers();
 builder.Services.AddAntiforgery();
 
-/*builder.Services.AddDbContext<DataContext>(options =>
-    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));*/
+var connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
+
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
 
 // Authentication and Authorization
-/*builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/login";
@@ -45,15 +48,15 @@ builder.Services.AddAntiforgery();
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Strict;
-    });*/
+    });
 
-/*builder.Services.AddAuthorization(options =>
+builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AllowAnonymous", policy => policy.RequireAssertion(context => true));
     options.FallbackPolicy = options.DefaultPolicy;
-});*/
+});
 
-/*builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();*/
+builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 
 // Dependency Injection for Services
 builder.Services.AddScoped<ISchoolYearService, SchoolYearService>();
@@ -94,9 +97,9 @@ app.UseStaticFiles();
 app.UseRouting();
 
 // Authentication and Authorization middleware
-//app.UseAuthentication();
-//app.UseAuthorization();
-//app.UseMiddleware<AuthMiddleware>();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseMiddleware<AuthMiddleware>();
 
 // Anti-forgery Middleware
 app.UseAntiforgery();

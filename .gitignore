@@ -1,0 +1,41 @@
+# Ignore build output
+bin/
+obj/
+out/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code / Visual Studio folders
+.vscode/
+.vs/
+
+# ASP.NET secrets & config
+secrets.json
+appsettings.Development.json
+
+# Log files
+*.log
+
+# Auto-generated files
+Generated_Code/
+
+# Node/NPM artifacts (if used)
+node_modules/
+
+# EF Core tools
+migrations/
+
+# Publish output
+publish/
+*.Publish.xml
+
+# Backup & temp files
+*.tmp
+*.bak
+*.swp
+*.DS_Store
+Thumbs.db
