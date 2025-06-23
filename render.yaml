@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: carpass-web
-    plan: free
-    branch: main
-    buildCommand: dotnet publish -c Release -o out
-    startCommand: dotnet out/Carpass_Profilling.dll
-    autoDeploy: true
