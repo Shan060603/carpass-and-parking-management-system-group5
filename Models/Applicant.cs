@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema; // ✅ ADD THIS
+
 
 namespace Carpass_Profilling.Models
 {
