@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Carpass_Profilling.Models
 {
+[Table("pendings")]
     public class Pending
     {
         [Key]
