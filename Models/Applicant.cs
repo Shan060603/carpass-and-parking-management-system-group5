@@ -2,6 +2,7 @@
 
 namespace Carpass_Profilling.Models
 {
+	[Table("applicants")]
     public class Applicant
     {
         [Key]
