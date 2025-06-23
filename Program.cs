@@ -27,9 +27,9 @@ builder.Services.AddRazorComponents()
 builder.Services.AddControllers();
 builder.Services.AddAntiforgery();
 
-builder.Services.AddDbContext<DataContext>(options =>
+/*builder.Services.AddDbContext<DataContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
+        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));*/
 
 // Authentication and Authorization
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
