@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Carpass_Profilling.Models
 {
-    [Table("user")]  // Match exact table name in your database
+    [Table("User")]  // Match exact table name in your database
     public partial class User
     {
         public string Name { get; set; } = null!;
