@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Carpass_Profilling.Models
 {
-    [Table("year")] // Must match your actual MySQL table name
+    [Table("syear")] // Must match your actual MySQL table name
     public class Schoolyear
     {
         [Key]
