@@ -1,4 +1,4 @@
-﻿using Carpass_Profilling.Models;
+using Carpass_Profilling.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Carpass_Profilling.Data
@@ -8,15 +8,14 @@ namespace Carpass_Profilling.Data
         public DataContext(DbContextOptions<DataContext> options) : base(options) { }
 
         public DbSet<User> Users { get; set; }
-        public DbSet<Applicant> applicants { get; set; }
-        public DbSet<Pending> pendings { get; set; }
-        public DbSet<Central_Data> central_datas { get; set; }
-        public DbSet<Schoolyear> syear { get; set; }
-
+        public DbSet<Applicant> Applicants { get; set; }
+        public DbSet<Pending> Pendings { get; set; }
+        public DbSet<Central_Data> Central_Datas { get; set; }
+        public DbSet<Schoolyear> Schoolyears { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.EnableSensitiveDataLogging(); // for development only
+            optionsBuilder.EnableSensitiveDataLogging(); // For dev only
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -28,7 +27,7 @@ namespace Carpass_Profilling.Data
             modelBuilder.Entity<Central_Data>().ToTable("central_datas");
             modelBuilder.Entity<Schoolyear>().ToTable("syear");
 
-            // === User Configuration ===
+            // === User ===
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.Email);
@@ -42,24 +41,18 @@ namespace Carpass_Profilling.Data
                 entity.Property(e => e.Image).HasColumnType("longblob");
             });
 
-            // === Applicant Configuration ===
+            // === Applicant ===
             modelBuilder.Entity<Applicant>(entity =>
             {
                 entity.HasKey(e => e.kiosk_Id);
 
-                entity.Property(e => e.Doc1).HasColumnType("longblob");
-                entity.Property(e => e.Doc2).HasColumnType("longblob");
-                entity.Property(e => e.Doc3).HasColumnType("longblob");
-                entity.Property(e => e.Doc4).HasColumnType("longblob");
-                entity.Property(e => e.Doc5).HasColumnType("longblob");
-                entity.Property(e => e.Doc6).HasColumnType("longblob");
-                entity.Property(e => e.Doc7).HasColumnType("longblob");
+                for (int i = 1; i <= 7; i++)
+                {
+                    entity.Property(typeof(byte[]), $"Doc{i}").HasColumnType("longblob");
+                }
             });
 
-            // === Schoolyear Configuration ===
-            modelBuilder.Entity<Schoolyear>().HasKey(s => s.Sy_ID);
-
-            // === Pending Configuration ===
+            // === Pending ===
             modelBuilder.Entity<Pending>(entity =>
             {
                 entity.HasKey(p => p.pending_ID);
@@ -70,7 +63,7 @@ namespace Carpass_Profilling.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // === Central_Data Configuration ===
+            // === Central_Data ===
             modelBuilder.Entity<Central_Data>(entity =>
             {
                 entity.HasKey(cd => cd.central_Id);
@@ -81,8 +74,10 @@ namespace Carpass_Profilling.Data
                     .OnDelete(DeleteBehavior.SetNull);
             });
 
-            // === Seed Data ===
+            // === Schoolyear ===
+            modelBuilder.Entity<Schoolyear>().HasKey(s => s.Sy_ID);
 
+            // === Seed Data ===
             modelBuilder.Entity<User>().HasData(
                 new User
                 {
@@ -90,7 +85,7 @@ namespace Carpass_Profilling.Data
                     Name = "CPU Admin",
                     Gender = "Male",
                     Birthday = "1980-01-01",
-                    Password = "admin123",
+                    Password = "admin123", // Note: Plain text not secure
                     Role = "Admin"
                 }
             );
