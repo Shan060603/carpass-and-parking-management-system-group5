@@ -1,22 +1,22 @@
-# Use SDK image to build the app
+# Step 1: Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy all files (including .csproj) first to ensure layer caching
-COPY . .
-
-# Restore dependencies
+# Copy csproj and restore
+COPY Carpass_Profilling.csproj ./
 RUN dotnet restore
 
-# Publish the application
-RUN dotnet publish Carpass_Profilling.csproj -c Release -o /app/out
+# Copy everything else and publish
+COPY . ./
+RUN dotnet publish Carpass_Profilling.csproj -c Release -o /app/publish
 
-# Use ASP.NET runtime image
+# Step 2: Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-# Copy published output from build stage
-COPY --from=build /app/out .
+COPY --from=build /app/publish ./
 
-# Run the app
+# Set environment variables if needed
+# ENV ASPNETCORE_URLS=http://+:80
+
 ENTRYPOINT ["dotnet", "Carpass_Profilling.dll"]
