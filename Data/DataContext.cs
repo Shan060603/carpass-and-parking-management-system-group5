@@ -8,10 +8,11 @@ namespace Carpass_Profilling.Data
         public DataContext(DbContextOptions<DataContext> options) : base(options) { }
 
         public DbSet<User> Users { get; set; }
-        public DbSet<Applicant> Applicants { get; set; }
-        public DbSet<Pending> Pendings { get; set; }
-        public DbSet<Central_Data> Central_Datas { get; set; }
-        public DbSet<Schoolyear> Syear { get; set; }
+        public DbSet<Applicant> applicants { get; set; }
+        public DbSet<Pending> pendings { get; set; }
+        public DbSet<Central_Data> central_datas { get; set; }
+        public DbSet<Schoolyear> syear { get; set; }
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
