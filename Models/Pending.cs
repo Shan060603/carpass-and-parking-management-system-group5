@@ -1,14 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Carpass_Profilling.Models
 {
-[Table("pendings")]
+    [Table("pendings")]
     public class Pending
     {
         [Key]
         public int pending_ID { get; set; }
+
+        // Foreign key to Applicant
+        [ForeignKey("Applicant")]
         public int? kiosk_Id { get; set; }
+
         public string? fullName { get; set; }
         public string? type_Applicant { get; set; }
         public string? type_Carpass { get; set; }
@@ -26,6 +30,7 @@ namespace Carpass_Profilling.Models
         public string? ve_Color { get; set; }
         public string? schoolyear { get; set; }
         public DateOnly? facefile_Date { get; set; }
+
         public bool IsDoc1Submitted { get; set; }
         public bool IsDoc2Submitted { get; set; }
         public bool IsDoc3Submitted { get; set; }
@@ -42,6 +47,7 @@ namespace Carpass_Profilling.Models
         public byte[]? Doc6 { get; set; }
         public byte[]? Doc7 { get; set; }
 
-        public Applicant Applicant { get; set; }
+        // Navigation property to Applicant
+        public Applicant? Applicant { get; set; }
     }
 }
