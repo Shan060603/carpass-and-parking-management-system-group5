@@ -32,7 +32,7 @@ builder.Services.AddAntiforgery();
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));*/
 
 // Authentication and Authorization
-/*builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/login";
@@ -58,7 +58,7 @@ builder.Services.AddScoped<ISchoolYearService, SchoolYearService>();
 builder.Services.AddScoped<IApplicantService, ApplicantService>();
 builder.Services.AddScoped<IPendingService, PendingService>();
 builder.Services.AddScoped<ICentralDataService, CentralDataService>();
-builder.Services.AddScoped<UserService>();*/
+builder.Services.AddScoped<UserService>();
 builder.Services.AddHttpContextAccessor();
 
 
