@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Carpass_Profilling.Models
 {
+[Table("central_datas")]
 	public class Central_Data
 	{
         [Key]
