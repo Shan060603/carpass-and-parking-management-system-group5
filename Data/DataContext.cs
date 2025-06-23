@@ -17,7 +17,6 @@ namespace Carpass_Profilling.Data
         public DbSet<Pending> Pendings { get; set; }
         public DbSet<Central_Data> Central_Datas { get; set; }
         public DbSet<Schoolyear> Syear { get; set; }
-        public DbSet<User> Users { get; set; }
 
 
         
